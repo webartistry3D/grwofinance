@@ -1,0 +1,112 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - img [ref=e7]
+          - heading "Admin" [level=1] [ref=e14]:
+            - generic [ref=e15]: Admin
+        - generic [ref=e16]:
+          - button [ref=e17] [cursor=pointer]:
+            - img
+          - button [ref=e19] [cursor=pointer]:
+            - img
+          - button [ref=e20] [cursor=pointer]:
+            - img
+    - main [ref=e21]:
+      - generic [ref=e22]:
+        - tablist [ref=e24]:
+          - tab "Overview" [selected] [ref=e25] [cursor=pointer]
+          - tab "Users" [ref=e26] [cursor=pointer]
+          - tab "Reports" [ref=e27] [cursor=pointer]
+        - tabpanel "Overview" [ref=e28]:
+          - generic [ref=e29]:
+            - generic [ref=e32]:
+              - generic [ref=e33]:
+                - paragraph [ref=e34]: Total Users
+                - paragraph [ref=e35]: "7"
+              - img [ref=e36]
+            - generic [ref=e43]:
+              - generic [ref=e44]:
+                - paragraph [ref=e45]: Active Users
+                - paragraph [ref=e46]: "7"
+              - img [ref=e47]
+            - generic [ref=e53]:
+              - generic [ref=e54]:
+                - paragraph [ref=e55]: Paid Users
+                - paragraph [ref=e56]: "0"
+              - img [ref=e57]
+            - generic [ref=e62]:
+              - generic [ref=e63]:
+                - paragraph [ref=e64]: Total Expenses
+                - paragraph [ref=e65]: ₦256,650.00
+              - img [ref=e66]
+          - generic [ref=e70]:
+            - generic [ref=e72]:
+              - img [ref=e73]
+              - text: Recent Activity
+            - generic [ref=e76]:
+              - generic [ref=e77]:
+                - generic [ref=e78]: "New users this month:"
+                - generic [ref=e79]: "0"
+              - generic [ref=e80]:
+                - generic [ref=e81]: "System status:"
+                - generic [ref=e82]: Healthy
+    - navigation [ref=e83]:
+      - generic [ref=e84]:
+        - link "Admin" [ref=e85] [cursor=pointer]:
+          - /url: /admin
+          - img [ref=e86]
+          - generic [ref=e89]: Admin
+        - link "Dashboard" [ref=e90] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e91]
+          - generic [ref=e94]: Dashboard
+        - link "Income" [ref=e95] [cursor=pointer]:
+          - /url: /income-manager
+          - img [ref=e96]
+          - generic [ref=e99]: Income
+        - link "Expense" [ref=e100] [cursor=pointer]:
+          - /url: /expense-manager
+          - img [ref=e101]
+          - generic [ref=e104]: Expense
+        - link "Reports" [ref=e105] [cursor=pointer]:
+          - /url: /reports
+          - img [ref=e106]
+          - generic [ref=e111]: Reports
+        - link "Settings" [ref=e112] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e113]
+          - generic [ref=e116]: Settings
+  - navigation [ref=e117]:
+    - generic [ref=e118]:
+      - link "Admin" [ref=e119] [cursor=pointer]:
+        - /url: /admin
+        - img [ref=e120]
+        - generic [ref=e123]: Admin
+      - link "Dashboard" [ref=e124] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e125]
+        - generic [ref=e128]: Dashboard
+      - link "Income" [ref=e129] [cursor=pointer]:
+        - /url: /income-manager
+        - img [ref=e130]
+        - generic [ref=e133]: Income
+      - link "Expense" [ref=e134] [cursor=pointer]:
+        - /url: /expense-manager
+        - img [ref=e135]
+        - generic [ref=e138]: Expense
+      - link "Reports" [ref=e139] [cursor=pointer]:
+        - /url: /reports
+        - img [ref=e140]
+        - generic [ref=e145]: Reports
+      - link "Settings" [ref=e146] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=e147]
+        - generic [ref=e150]: Settings
+```

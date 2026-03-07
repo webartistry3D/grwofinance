@@ -1,0 +1,400 @@
+{/*@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&display=swap');*/}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom bot pulse animation */
+@keyframes bot-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(2);
+  }
+}
+
+.animate-bot-pulse {
+  animation: bot-pulse 2s ease-in-out infinite;
+}
+
+/* Arrow pulse animation */
+@keyframes arrow-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(2);
+  }
+}
+
+.animate-arrow-pulse {
+  animation: arrow-pulse 2s ease-in-out infinite;
+}
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(210 25% 7.8431%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(210 25% 7.8431%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(210 25% 7.8431%);
+  --primary: hsl(150 48% 46%);  /* #29A378 GrwoFinance Green */
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(158 64% 24%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(210 40% 96%);
+  --muted-foreground: hsl(215 16% 47%);
+  --accent: hsl(42 92% 56%);
+  --accent-foreground: hsl(0 0% 0%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(214 32% 91%);
+  --input: hsl(214 32% 91%);
+  --ring: hsl(150 48% 46%);  /* #29A378 GrwoFinance Green */
+  --chart-1: hsl(150 48% 46%);  /* #29A378 GrwoFinance Green */
+  --chart-2: hsl(220 70% 50%);
+  --chart-3: hsl(262 83% 58%);
+  --chart-4: hsl(142 76% 36%);
+  --chart-5: hsl(343 75% 51%);
+  --sidebar: hsl(0 0% 100%);
+  --sidebar-foreground: hsl(210 25% 7.8431%);
+  --sidebar-primary: hsl(150 48% 46%);  /* #29A378 GrwoFinance Green */
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(210 40% 96%);
+  --sidebar-accent-foreground: hsl(215 16% 47%);
+  --sidebar-border: hsl(214 32% 91%);
+  --sidebar-ring: hsl(150 48% 46%);  /* #29A378 GrwoFinance Green */
+  --font-sans: Aeonik, system-ui, sans-serif;
+  --font-display: Aeonik, system-ui, sans-serif;
+  --font-serif: Aeonik, system-ui, sans-serif;
+  --font-mono: Aeonik, system-ui, sans-serif;
+  --radius: 0.75rem;
+  
+  /* Custom GrwoFinance green backgrounds for light theme */
+  --primary-light: hsl(159 60% 92%);
+  --primary-medium: hsl(159 60% 88%);
+  
+  /* Process flow card background */
+  --process-card-bg: #29A378;
+}
+
+.dark {
+  --background: hsl(210 11% 15%);
+  --foreground: hsl(213 31% 91%);
+  --card: hsl(210 12% 20%);
+  --card-foreground: hsl(213 31% 91%);
+  --popover: hsl(210 12% 20%);
+  --popover-foreground: hsl(213 31% 91%);
+  --primary: hsl(159 60% 40%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 12% 16%);
+  --secondary-foreground: hsl(213 31% 91%);
+  --muted: hsl(210 12% 16%);
+  --muted-foreground: hsl(215 20.2% 65.1%);
+  --accent: hsl(210 12% 16%);
+  --accent-foreground: hsl(213 31% 91%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(210 12% 26%);
+  --input: hsl(210 12% 26%);
+  --ring: hsl(159 60% 40%);
+  --chart-1: hsl(159 60% 40%);
+  --chart-2: hsl(159 60% 50%);
+  --chart-3: hsl(159 60% 60%);
+  --chart-4: hsl(159 60% 30%);
+  --chart-5: hsl(159 60% 70%);
+  --sidebar: hsl(210 12% 20%);
+  --sidebar-foreground: hsl(213 31% 91%);
+  --sidebar-primary: hsl(159 60% 40%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(210 12% 16%);
+  --sidebar-accent-foreground: hsl(215 20.2% 65.1%);
+  --sidebar-border: hsl(210 12% 26%);
+  --sidebar-ring: hsl(159 60% 40%);
+  
+  /* Custom GrwoFinance green backgrounds for dark theme */
+  --primary-light: hsl(159 60% 8%);
+  --primary-medium: hsl(159 60% 12%);
+  
+  /* Process flow card background */
+  --process-card-bg: #29A378;
+}
+
+
+
+/* Light mode colors (when dark mode is disabled) */
+.light {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(210 25% 7.8431%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(210 25% 7.8431%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(210 25% 7.8431%);
+  --primary: hsl(159 60% 40%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(158 64% 24%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(210 40% 96%);
+  --muted-foreground: hsl(215 16% 47%);
+  --accent: hsl(42 92% 56%);
+  --accent-foreground: hsl(0 0% 0%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(214 32% 91%);
+  --input: hsl(214 32% 91%);
+  --ring: hsl(159 60% 40%);
+  --chart-1: hsl(159 60% 40%);
+  --chart-2: hsl(220 70% 50%);
+  --chart-3: hsl(262 83% 58%);
+  --chart-4: hsl(142 76% 36%);
+  --chart-5: hsl(343 75% 51%);
+  --sidebar: hsl(0 0% 100%);
+  --sidebar-foreground: hsl(210 25% 7.8431%);
+  --sidebar-primary: hsl(159 60% 40%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(210 40% 96%);
+  --sidebar-accent-foreground: hsl(215 16% 47%);
+  --sidebar-border: hsl(214 32% 91%);
+  --sidebar-ring: hsl(159 60% 40%);
+  
+  /* Custom GrwoFinance green backgrounds for light theme */
+  --primary-light: hsl(159 60% 92%);
+  --primary-medium: hsl(159 60% 88%);
+  
+  /* Process flow card background */
+  --process-card-bg: #29A378;
+}
+
+.dark {
+  --background: hsl(210 11% 15%);
+  --foreground: hsl(213 31% 91%);
+  --card: hsl(210 12% 20%);
+  --card-foreground: hsl(213 31% 91%);
+  --popover: hsl(210 12% 20%);
+  --popover-foreground: hsl(213 31% 91%);
+  --primary: hsl(159 60% 40%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 12% 16%);
+  --secondary-foreground: hsl(213 31% 91%);
+  --muted: hsl(210 12% 16%);
+  --muted-foreground: hsl(215 20.2% 65.1%);
+  --accent: hsl(210 12% 16%);
+  --accent-foreground: hsl(213 31% 91%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(210 12% 26%);
+  --input: hsl(210 12% 26%);
+  --ring: hsl(159 60% 40%);
+  --chart-1: hsl(159 60% 40%);
+  --chart-2: hsl(159 60% 50%);
+  --chart-3: hsl(159 60% 60%);
+  --chart-4: hsl(159 60% 30%);
+  --chart-5: hsl(159 60% 70%);
+  --sidebar: hsl(210 12% 20%);
+  --sidebar-foreground: hsl(213 31% 91%);
+  --sidebar-primary: hsl(159 60% 40%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(210 12% 16%);
+  --sidebar-accent-foreground: hsl(215 20.2% 65.1%);
+  --sidebar-border: hsl(210 12% 26%);
+  --sidebar-ring: hsl(159 60% 40%);
+  
+  /* Custom GrwoFinance green backgrounds for dark theme */
+  --primary-light: hsl(159 60% 8%);
+  --primary-medium: hsl(159 60% 12%);
+  
+  /* Process flow card background */
+  --process-card-bg: #29A378;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Fix select component styling for both light and dark themes */
+[data-radix-select-trigger] {
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+[data-radix-select-content] {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+[data-radix-select-item] {
+  background-color: transparent !important;
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+[data-radix-select-item]:hover,
+[data-radix-select-item][data-highlighted] {
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
+
+/* Fix autocomplete styling to match input theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px hsl(214, 32%, 91%) inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+  background-color: hsl(214, 32%, 91%) !important;
+  background-image: none !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Dark mode autocomplete fix */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px hsl(210, 12%, 26%) inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+  background-color: hsl(210, 12%, 26%) !important;
+  background-image: none !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Email input specific styling to match password field */
+input[data-testid="input-email"],
+input[data-testid="input-email"]:focus {
+  background-color: hsl(214, 32%, 91%) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark input[data-testid="input-email"],
+.dark input[data-testid="input-email"]:focus {
+  background-color: hsl(210, 12%, 26%) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Email autocomplete specific overrides - Force white text */
+input[data-testid="input-email"]:-webkit-autofill,
+input[data-testid="input-email"]:-webkit-autofill:hover,
+input[data-testid="input-email"]:-webkit-autofill:focus,
+input[data-testid="input-email"]:-webkit-autofill:active {
+  background-color: hsl(214, 32%, 91%) !important;
+  color: #ffffff !important;
+  background-image: none !important;
+  -webkit-box-shadow: 0 0 0 1000px hsl(214, 32%, 91%) inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+  caret-color: #ffffff !important;
+}
+
+.dark input[data-testid="input-email"]:-webkit-autofill,
+.dark input[data-testid="input-email"]:-webkit-autofill:hover,
+.dark input[data-testid="input-email"]:-webkit-autofill:focus,
+.dark input[data-testid="input-email"]:-webkit-autofill:active {
+  background-color: hsl(210, 12%, 26%) !important;
+  color: #ffffff !important;
+  background-image: none !important;
+  -webkit-box-shadow: 0 0 0 1000px hsl(210, 12%, 26%) inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+  caret-color: #ffffff !important;
+}
+
+/* Additional override for any missed autocomplete states */
+input[data-testid="input-email"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.dark input[data-testid="input-email"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+@layer utilities {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  /* Custom GrwoFinance green background utilities */
+  .bg-primary-light {
+    background-color: var(--primary-light);
+  }
+  
+  .bg-primary-medium {
+    background-color: var(--primary-medium);
+  }
+  
+  .bg-process-card {
+    background-color: var(--process-card-bg);
+  }
+  
+  /* Process card flowing animations - removed since cards no longer have containers */
+  
+  /* Process icon flowing animations */
+  .process-icon-1 {
+    animation: icon-pulse-sequential 12s ease-in-out infinite;
+  }
+  
+  .process-icon-2 {
+    animation: icon-pulse-sequential 12s ease-in-out infinite;
+    animation-delay: 3s;
+  }
+  
+  .process-icon-3 {
+    animation: icon-pulse-sequential 12s ease-in-out infinite;
+    animation-delay: 6s;
+  }
+  
+  .process-icon-4 {
+    animation: icon-pulse-sequential 12s ease-in-out infinite;
+    animation-delay: 9s;
+  }
+  
+
+  
+  @keyframes icon-pulse-sequential {
+    0%, 75%, 100% {
+      transform: scale(1);
+    }
+    12.5%, 25% {
+      transform: scale(1.4);
+    }
+  }
+  
+  .animate-scroll {
+    animation: scroll 20s linear infinite;
+  }
+  
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  
+  @keyframes slide-left-to-right {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-slide-left-to-right {
+    animation: slide-left-to-right 20s linear infinite;
+  }
+}

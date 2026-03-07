@@ -1,0 +1,50 @@
+/* API Documentation Animations */
+
+/* Section Container */
+.api-section {
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Section Content - Force specific styles */
+div.api-section-content {
+  overflow: hidden;
+  background-color: hsl(var(--card));
+  border-radius: 0 0 0.5rem 0.5rem;
+  transition: height 0.4s ease-in-out, max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+}
+
+div.api-section-content.collapsed {
+  height: 0px !important;
+  max-height: 0px !important;
+  opacity: 0 !important;
+  padding: 0px !important;
+}
+
+div.api-section-content.expanded {
+  height: auto !important;
+  max-height: 2000px !important;
+  opacity: 1 !important;
+  padding: 1.5rem !important;
+}
+
+/* Chevron Icon Animation */
+.api-chevron {
+  transition: transform 0.3s ease-in-out !important;
+  transform-origin: center;
+  display: inline-block;
+}
+
+.api-chevron.rotated {
+  transform: rotate(180deg) !important;
+}
+
+/* Hover Effects */
+.api-section-header {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.api-section-header:hover {
+  background-color: hsl(var(--accent) / 0.5);
+}

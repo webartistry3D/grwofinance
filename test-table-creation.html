@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Bank Accounts Table</title>
+</head>
+<body>
+    <h1>Bank Accounts Table Creation</h1>
+    <button onclick="createTable()">Create Bank Accounts Table</button>
+    <div id="result"></div>
+
+    <script>
+        async function createTable() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Creating table...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/create-bank-accounts-table');
+                const data = await response.json();
+                resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: red;">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
