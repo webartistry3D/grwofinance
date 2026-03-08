@@ -60,6 +60,7 @@ interface ExpenseRecord {
   category?: string;
   date?: string;
   description?: string;
+  vatAmount?: string | number;
 }
 
 interface IncomeRecord {
@@ -330,7 +331,7 @@ export default function GlobalDashboard() {
             const d = new Date(e.date ?? "");
             const now = new Date();
             return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-              ? sum + parseNumber(e.amount)
+              ? sum + parseNumber(e.amount) + parseNumber(e.vatAmount || '0')
               : sum;
           }, 0);
 
@@ -347,13 +348,13 @@ export default function GlobalDashboard() {
             endOfWeek.setDate(startOfWeek.getDate() + 6);
             endOfWeek.setHours(23, 59, 59, 999);
 
-            return d >= startOfWeek && d <= endOfWeek ? sum + parseNumber(e.amount) : sum;
+            return d >= startOfWeek && d <= endOfWeek ? sum + parseNumber(e.amount) + parseNumber(e.vatAmount || '0') : sum;
           }, 0);
 
     const totalExpenses =
       dash.totalExpenses !== undefined
         ? parseNumber(dash.totalExpenses)
-        : expenses.reduce((sum, e) => sum + parseNumber(e.amount), 0);
+        : expenses.reduce((sum, e) => sum + parseNumber(e.amount) + parseNumber(e.vatAmount || '0'), 0);
 
 
     const monthlyIncome = parseNumber(incStats.monthlyTotal || 0);

@@ -10,6 +10,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ArrowLeft, Check, Crown, CreditCard, Calendar, AlertCircle } from "lucide-react";
 import FullScreenSkeleton from "@/components/FullScreenSkeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function Subscription() {
   const [, setLocation] = useLocation();
@@ -17,6 +25,8 @@ export default function Subscription() {
   const { user, isLoading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
+  const [showRenewModal, setShowRenewModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     fetchSubscriptionInfo();
@@ -104,11 +114,35 @@ export default function Subscription() {
     }
   };
 
-  const handleCancelSubscription = async () => {
-    if (!confirm("Are you sure you want to cancel your subscription? You'll lose access to premium features at the end of your billing period.")) {
-      return;
+  const handleRenewSubscription = async () => {
+    setShowRenewModal(false);
+    setLoadingPlan('monthly');
+    try {
+      const response = await apiRequest("/api/subscription/create", "POST", { planType: 'monthly' });
+      const data = await response.json();
+      
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create renewal session",
+          variant: "destructive",
+        });
+        setLoadingPlan(null);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to renew subscription",
+        variant: "destructive",
+      });
+      setLoadingPlan(null);
     }
+  };
 
+  const handleCancelSubscription = async () => {
+    setShowCancelModal(false);
     setLoading(true);
     try {
       await apiRequest("/api/subscription/cancel", "POST");
@@ -133,7 +167,11 @@ export default function Subscription() {
   // Use subscription info for display, fallback to user data
   const isPremium = subscriptionInfo?.subscriptionPlan === "premium" || (user as any)?.subscriptionPlan === "premium";
   const scansUsed = subscriptionInfo?.monthlyScansUsed ?? parseInt((user as any)?.monthlyScansUsed || "0");
-  const scansLimit = subscriptionInfo?.scansLimit ?? (isPremium ? -1 : 10);
+  const scansLimit = subscriptionInfo?.scansLimit ?? (isPremium ? -1 : 5); // Updated to 5 to match pricing card
+  const invoicesUsed = subscriptionInfo?.monthlyInvoicesUsed ?? 0;
+  const invoicesLimit = subscriptionInfo?.invoicesLimit ?? (isPremium ? -1 : 5);
+  const savingsGoalsCount = subscriptionInfo?.savingsGoalsCount ?? 0;
+  const savingsGoalsLimit = subscriptionInfo?.savingsGoalsLimit ?? (isPremium ? -1 : 1);
 
   // Show skeleton while auth is loading or subscription info is not yet available
   if (authLoading || !subscriptionInfo) {
@@ -196,6 +234,20 @@ export default function Subscription() {
               </span>
             </div>
 
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Monthly Invoices Used</span>
+              <span className="font-mono">
+                {invoicesUsed} / {invoicesLimit === -1 ? "Unlimited" : invoicesLimit}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Savings Goals Created</span>
+              <span className="font-mono">
+                {savingsGoalsCount} / {savingsGoalsLimit === -1 ? "Unlimited" : savingsGoalsLimit}
+              </span>
+            </div>
+
 
 
             {subscriptionInfo?.subscriptionEndDate && (
@@ -216,6 +268,24 @@ export default function Subscription() {
                 </span>
               </div>
             )}
+
+            {!isPremium && invoicesUsed >= invoicesLimit && (
+              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-destructive" />
+                <span className="text-sm text-destructive">
+                  You've reached your monthly invoice limit. Upgrade to Premium for unlimited invoices.
+                </span>
+              </div>
+            )}
+
+            {!isPremium && savingsGoalsCount >= savingsGoalsLimit && (
+              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-destructive" />
+                <span className="text-sm text-destructive">
+                  You've reached your savings goals limit. Upgrade to Premium for unlimited savings goals.
+                </span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -231,31 +301,31 @@ export default function Subscription() {
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Up to 5 receipt scans per month</span>
+                <span className="text-sm">Up to 5 receipt scans</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Up to 5 invoices per month</span>
+                <span className="text-sm">Up to 5 invoices</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Up to 2 savings goals</span>
+                <span className="text-sm">1 savings goals</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Business dashboard</span>
+                <span className="text-sm">Dashboard Overview</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Income manager</span>
+                <span className="text-sm">Income manager module</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Expense manager</span>
+                <span className="text-sm">Expense manager module</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Tax-ready financial reports (view only)</span>
+                <span className="text-sm">Financial reports (view only)</span>
               </div>
               {/*<div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
@@ -299,23 +369,19 @@ export default function Subscription() {
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Business dashboard</span>
+                <span className="text-sm">Dashboard Overview</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Income manager</span>
+                <span className="text-sm">Income manager module</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Expense manager</span>
+                <span className="text-sm">Expense manager module</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Tax-ready financial reports</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Export reports in PDF and Excel</span>
+                <span className="text-sm">Financial reports in PDF and Excel</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
@@ -379,7 +445,7 @@ export default function Subscription() {
                 </div>
                 <Button 
                   className="bg-primary hover:bg-primary/90"
-                  onClick={() => handleUpgrade('monthly')}
+                  onClick={() => setShowRenewModal(true)}
                   disabled={loadingPlan !== null}
                   data-testid="button-renew-subscription"
                 >
@@ -397,7 +463,7 @@ export default function Subscription() {
                 </div>
                 <Button 
                   variant="destructive" 
-                  onClick={handleCancelSubscription}
+                  onClick={() => setShowCancelModal(true)}
                   disabled={loading}
                   data-testid="button-cancel-subscription"
                 >
@@ -408,6 +474,122 @@ export default function Subscription() {
           </Card>
         )}
       </main>
+
+      {/* Renew Subscription Modal */}
+      <Dialog open={showRenewModal} onOpenChange={setShowRenewModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-primary" />
+              Renew Subscription
+            </DialogTitle>
+            <DialogDescription>
+              Extend your premium access with another month of unlimited features.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium">Monthly Premium Plan</span>
+                <span className="font-bold text-primary" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
+                  {formatNaira(3000)}
+                </span>
+              </div>
+              <ul className="text-sm space-y-1 text-muted-foreground">
+                <li>• Unlimited receipt scans</li>
+                <li>• Unlimited invoices</li>
+                <li>• Tax compliance tools</li>
+                <li>• Priority support</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowRenewModal(false)}
+              disabled={loadingPlan !== null}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-primary hover:bg-primary/90"
+              onClick={handleRenewSubscription}
+              disabled={loadingPlan !== null}
+            >
+              {loadingPlan === 'monthly' ? (
+                <>
+                  <Crown className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Crown className="w-4 h-4 mr-2" />
+                  Renew Now
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Subscription Modal */}
+      <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-5 h-5" />
+              Cancel Subscription
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel your premium subscription?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-3">
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                <p className="text-sm font-medium text-destructive mb-2">
+                  What happens when you cancel:
+                </p>
+                <ul className="text-sm space-y-1 text-muted-foreground">
+                  <li>• You'll keep premium access until your current billing period ends</li>
+                  <li>• After that, you'll be downgraded to the Freemium plan</li>
+                  <li>• Limited to 5 receipt scans and 5 invoices per month</li>
+                  <li>• No access to tax compliance tools</li>
+                </ul>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <p>You can resubscribe anytime to regain premium features.</p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelModal(false)}
+              disabled={loading}
+            >
+              Keep Subscription
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelSubscription}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <AlertCircle className="w-4 h-4 mr-2 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Cancel Subscription
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

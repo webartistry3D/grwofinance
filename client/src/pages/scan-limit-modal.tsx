@@ -28,7 +28,7 @@ export default function ScanLimitModal({
     setLocation("/subscription");
   };
 
-  const isNearLimit = userPlan === "freemium" && scansUsed >= 8;
+  const isNearLimit = userPlan === "freemium" && scansUsed >= 4;
   const hasReachedLimit = userPlan === "freemium" && scansUsed >= scansLimit;
 
   return (
@@ -50,7 +50,7 @@ export default function ScanLimitModal({
           </DialogTitle>
           <DialogDescription>
             {hasReachedLimit 
-              ? "You've used all 10 of your monthly scans. Upgrade to Premium for unlimited scanning."
+              ? "You've used all 5 of your monthly scans. Upgrade to Premium for unlimited scanning."
               : `You've used ${scansUsed} of your ${scansLimit} monthly scans. Consider upgrading for unlimited access.`
             }
           </DialogDescription>

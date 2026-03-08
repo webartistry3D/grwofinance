@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { Bot } from "lucide-react";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import "./websocket-debug-override"; // Import WebSocket debug override early
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
@@ -51,6 +52,7 @@ import TaxReports from "@/pages/tax-reports";
 import TaxReceipts from "@/pages/tax-receipts";
 import VatTracking from "@/pages/vat-tracking";
 import FileTax from "@/pages/file-tax";
+import TaxCalculator from "@/pages/tax-calculator";
 
 function ProtectedRoute({ component: Component, adminOnly = false }: { component: any, adminOnly?: boolean }) {
   const { isAuthenticated, isLoading, isAdmin } = useAuth();
@@ -188,6 +190,7 @@ function AppRouter() {
       <Route path="/savings-goals" component={() => <ProtectedRoute component={SavingsGoals} />} />
       <Route path="/tax-compliance" component={() => <ProtectedRoute component={TaxCompliance} />} />
       <Route path="/tax-calendar" component={() => <ProtectedRoute component={TaxCalendar} />} />
+      <Route path="/tax-calculator" component={() => <ProtectedRoute component={TaxCalculator} />} />
       <Route path="/vat-tracking" component={() => <ProtectedRoute component={VatTracking} />} />
       <Route path="/wht-tracking" component={() => <ProtectedRoute component={WhtTracking} />} />
       <Route path="/tax-reports" component={() => <ProtectedRoute component={TaxReports} />} />

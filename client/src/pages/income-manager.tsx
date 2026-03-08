@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatNaira, parseAmount } from "@/lib/currency";
-import { Plus, ChevronLeft, ChevronRight, TrendingUp, FileText, History, BarChart3, Settings, ArrowLeft, Wallet, Calendar, Trash2, Edit, X } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, TrendingUp, FileText, History, BarChart3, Settings, ArrowLeft, Wallet, Calendar, Trash2, Edit, X, PieChart as PieChartIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -25,6 +25,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 
 interface IncomeStats {
@@ -75,6 +83,8 @@ export default function IncomeManager() {
   
   // Add Income modal state
   const [showAddIncomeModal, setShowAddIncomeModal] = useState(false);
+  const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'last7days' | 'last30days' | 'yearly'>('last30days');
   const [incomeFormData, setIncomeFormData] = useState({
     source: '',
     description: '',
@@ -565,6 +575,41 @@ export default function IncomeManager() {
   // Get only the last 3 records for Recent History
   const recentPayments = sortedRecentPayments.slice(0, 3);
 
+  // Calculate income breakdown for piechart
+  const COLORS = ['#29A378', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#F97316'];
+  const incomeSourceTotals: { [key: string]: number } = {};
+  
+  // Filter income based on selected period
+  const now = new Date();
+  const filteredPayments = stats.recentPayments?.filter((payment: any) => {
+    const paymentDate = new Date(payment.date);
+    switch (selectedPeriod) {
+      case 'daily':
+        return paymentDate.toDateString() === now.toDateString();
+      case 'last7days':
+        const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+        return paymentDate >= sevenDaysAgo;
+      case 'last30days':
+        const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+        return paymentDate >= thirtyDaysAgo;
+      case 'yearly':
+        return paymentDate.getFullYear() === now.getFullYear();
+      default:
+        return true;
+    }
+  }) || [];
+  
+  filteredPayments.forEach((payment) => {
+    const source = payment.source || 'Other';
+    incomeSourceTotals[source] = (incomeSourceTotals[source] || 0) + payment.amount;
+  });
+  
+  const incomeBreakdown = Object.entries(incomeSourceTotals).map(([source, amount], idx) => ({
+    source,
+    amount: Number(amount),
+    color: COLORS[idx % COLORS.length],
+  }));
+
   return (
     <div className="w-full max-w-none md:max-w-4xl lg:max-w-6xl mx-auto bg-background min-h-screen">
       <Header title="Income Manager" showBack={true} backHref="/" />
@@ -810,6 +855,112 @@ export default function IncomeManager() {
                 </Card>
               )}
             </div>
+          </section>
+
+          {/* Right 50% - Income Breakdown Pie Chart */}
+          <section>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold">Income Breakdown</h2>
+                </div>
+                
+                {/* Time Period Selection Buttons */}
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    variant={selectedPeriod === 'daily' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedPeriod('daily')}
+                  >
+                    Today
+                  </Button>
+                  <Button
+                    variant={selectedPeriod === 'last7days' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedPeriod('last7days')}
+                  >
+                    Last 7 Days
+                  </Button>
+                  <Button
+                    variant={selectedPeriod === 'last30days' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedPeriod('last30days')}
+                  >
+                    Last 30 Days
+                  </Button>
+                  <Button
+                    variant={selectedPeriod === 'yearly' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedPeriod('yearly')}
+                  >
+                    Yearly
+                  </Button>
+                </div>
+                
+                {incomeBreakdown.length > 0 ? (
+                  <div className="h-80 flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie 
+                          data={incomeBreakdown} 
+                          cx="50%" 
+                          cy="50%" 
+                          innerRadius={60} 
+                          outerRadius={100} 
+                          dataKey="amount" 
+                          stroke="#fff" 
+                          strokeWidth={2}
+                          startAngle={90}
+                          endAngle={-270}
+                          animationBegin={0}
+                          animationDuration={800}
+                          label={({ source, percent }) => `${source} ${(percent * 100).toFixed(0)}%`}
+                          labelLine={false}
+                        >
+                          {incomeBreakdown.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.color}
+                              style={{
+                                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                                cursor: 'pointer'
+                              }}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value: number, name: string, props: any) => [
+                            formatNaira(value),
+                            props.payload.source || name
+                          ]}
+                          labelStyle={{ color: "#333", fontWeight: "bold" }}
+                          contentStyle={{
+                            backgroundColor: "rgba(255,255,255,0.95)",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "12px",
+                            boxShadow: "0 8px 16px rgba(0, 0, 0, 0.15)",
+                            padding: "12px"
+                          }}
+                        />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36}
+                          formatter={(value: string, entry: any) => (
+                            <span style={{ color: entry.color, fontWeight: 'bold' }}>
+                              {value}
+                            </span>
+                          )}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-80 flex items-center justify-center text-center">
+                    <p className="text-muted-foreground">No income data available</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </section>
         </div>
       </main>

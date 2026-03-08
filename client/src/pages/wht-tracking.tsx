@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Receipt, Plus, Download, CheckCircle, AlertCircle, FileText } from "lucide-react";
+import { Receipt, Plus, Download, CheckCircle, AlertCircle, FileText, Crown } from "lucide-react";
 import { formatNaira } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -215,9 +215,69 @@ export default function WHTTracking() {
     }
   };
 
-  // Show skeleton while auth is loading or data is loading
-  if (authLoading || isLoading) {
+  // Show skeleton while auth is loading
+  if (authLoading) {
     return <FullScreenSkeleton />;
+  }
+
+  // Check if user has premium access for WHT tracking
+  const isPremium = (user as any)?.subscriptionPlan === "premium";
+  if (!isPremium) {
+    return (
+      <div className="w-full max-w-4xl mx-auto bg-background min-h-screen">
+        <Header title="WHT Tracking" showBack={true} backHref="/tax-compliance" />
+        <div className="text-center py-20">
+          <Receipt className="w-16 h-16 mx-auto text-purple-600 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Premium Feature
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            Withholding Tax (WHT) tracking and management is available for Premium subscribers only. Upgrade to access comprehensive WHT monitoring, credit tracking, and certificate management.
+          </p>
+          <div className="space-y-3">
+            <Button 
+              onClick={() => setLocation("/subscription")} 
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              Upgrade to Premium
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setLocation("/expense-manager")}
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          {/* Feature comparison */}
+          <div className="mt-12 max-w-2xl mx-auto">
+            <h3 className="text-lg font-semibold mb-4">Premium WHT Features</h3>
+            <div className="grid md:grid-cols-2 gap-4 text-left">
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <h4 className="font-medium text-red-600 mb-2">Freemium</h4>
+                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <li>• Basic expense tracking</li>
+                  <li>• Manual WHT calculations</li>
+                  <li>• Simple reporting</li>
+                </ul>
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                <h4 className="font-medium text-purple-600 mb-2">Premium</h4>
+                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <li>• WHT tracking & monitoring</li>
+                  <li>• WHT credit management</li>
+                  <li>• Certificate tracking</li>
+                  <li>• Automated WHT calculations</li>
+                  <li>• Tax position analysis</li>
+                  <li>• Compliance reporting</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Calculate WHT totals by type

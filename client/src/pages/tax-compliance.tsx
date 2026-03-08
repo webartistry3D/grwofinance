@@ -21,7 +21,8 @@ import {
   ArrowLeft,
   AlertCircle,
   Calculator,
-  Settings
+  Settings,
+  Crown
 } from "lucide-react";
 import { formatNaira } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
@@ -671,6 +672,66 @@ export default function TaxCompliance() {
   // Show skeleton while auth is loading
   if (authLoading || isLoading) {
     return <FullScreenSkeleton />;
+  }
+
+  // Check if user has premium access for tax compliance tools
+  const isPremium = (user as any)?.subscriptionPlan === "premium";
+  if (!isPremium) {
+    return (
+      <div className="w-full max-w-4xl mx-auto bg-background min-h-screen">
+        <Header title="Tax Compliance Center" showBack={true} backHref="/expense-manager" />
+        <div className="text-center py-20">
+          <Shield className="w-16 h-16 mx-auto text-purple-600 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Premium Feature
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            Tax compliance tools are available for Premium subscribers only. Upgrade to access comprehensive tax tracking, compliance monitoring, and reporting features.
+          </p>
+          <div className="space-y-3">
+            <Button 
+              onClick={() => setLocation("/subscription")} 
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              Upgrade to Premium
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setLocation("/expense-manager")}
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          {/* Feature comparison */}
+          <div className="mt-12 max-w-2xl mx-auto">
+            <h3 className="text-lg font-semibold mb-4">Premium Tax Features</h3>
+            <div className="grid md:grid-cols-2 gap-4 text-left">
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <h4 className="font-medium text-red-600 mb-2">Freemium</h4>
+                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <li>• Basic expense tracking</li>
+                  <li>• Simple reporting</li>
+                  <li>• Manual tax calculations</li>
+                </ul>
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                <h4 className="font-medium text-purple-600 mb-2">Premium</h4>
+                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <li>• ✅ Tax compliance monitoring</li>
+                  <li>• ✅ WHT tracking & management</li>
+                  <li>• ✅ Automated tax calculations</li>
+                  <li>• ✅ Tax deadline reminders</li>
+                  <li>• ✅ Professional tax reports</li>
+                  <li>• ✅ VAT & WHT optimization</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Show error state if there's an error

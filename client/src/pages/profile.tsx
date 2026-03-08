@@ -166,13 +166,13 @@ export default function Profile() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Monthly Scans Used</span>
               <span className="text-sm font-mono">
-                {(user as any)?.monthlyScansUsed || 0} / {(user as any)?.subscriptionPlan === "premium" ? "Unlimited" : "10"}
+                {(user as any)?.monthlyScansUsed || 0} / {(user as any)?.subscriptionPlan === "premium" ? "Unlimited" : "5"}
               </span>
             </div>
-            {(user as any)?.subscriptionPlan === "freemium" && parseInt((user as any)?.monthlyScansUsed || "0") >= 8 && (
+            {(user as any)?.subscriptionPlan === "freemium" && parseInt((user as any)?.monthlyScansUsed || "0") >= 4 && (
               <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                 <span className="text-xs text-yellow-700 dark:text-yellow-400">
-                  {parseInt((user as any)?.monthlyScansUsed || "0") >= 10 
+                  {parseInt((user as any)?.monthlyScansUsed || "0") >= 5 
                     ? "Monthly limit reached. Upgrade to Premium for unlimited scans."
                     : "You're close to your monthly scan limit. Consider upgrading to Premium."
                   }

@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, FileText, Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CalendarIcon, FileText, Plus, Trash2, Crown, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { formatNaira, formatAmountInput, parseAmount } from "@/lib/currency";
@@ -33,6 +34,8 @@ export default function CreateInvoice() {
   const [dueDate, setDueDate] = useState<Date>();
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitErrorData, setLimitErrorData] = useState<any>(null);
   const [formData, setFormData] = useState({
     invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
     clientName: "",
@@ -61,11 +64,17 @@ export default function CreateInvoice() {
       setLocation("/income-manager");
     },
     onError: (error: any) => {
-      toast({
-        title: "Failed to Create Invoice",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+      // Check if it's a limit error
+      if (error.message?.includes?.('Monthly invoice limit reached') || error.status === 429) {
+        setLimitErrorData(error);
+        setShowLimitModal(true);
+      } else {
+        toast({
+          title: "Failed to Create Invoice",
+          description: error.message || "Please try again",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -501,6 +510,56 @@ export default function CreateInvoice() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Invoice Limit Modal */}
+      <Dialog open={showLimitModal} onOpenChange={setShowLimitModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              Invoice Limit Reached
+            </DialogTitle>
+            <DialogDescription>
+              You've reached your monthly invoice limit of 5 invoices. Upgrade to Premium to create unlimited invoices.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <h4 className="font-semibold text-lg mb-3">Upgrade to Premium</h4>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                  <span>Unlimited invoices</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                  <span>Advanced reporting</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                  <span>Priority support</span>
+                </li>
+              </ul>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => setLocation("/subscription")}
+                className="flex-1 bg-[#29A378] hover:bg-[#238c68]"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade to Premium
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setShowLimitModal(false)}
+                className="flex-1"
+              >
+                Maybe Later
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNavigation />
     </div>

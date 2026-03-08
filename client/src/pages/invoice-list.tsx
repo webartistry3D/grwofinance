@@ -39,8 +39,23 @@ export default function InvoiceList() {
   const sortedInvoices = invoices ? [...invoices].sort((a, b) => {
     const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return dateB - dateA;
+    return dateB - dateB;
   }) : [];
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  // Calculate pagination
+  const totalPages = Math.ceil((sortedInvoices?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentInvoices = sortedInvoices.slice(startIndex, endIndex);
+  
+  // Reset to page 1 when invoices change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortedInvoices?.length]);
 
   // Fix invoices that are marked as paid but have amountPaid = 0
   useEffect(() => {
@@ -466,6 +481,61 @@ export default function InvoiceList() {
           </Link>
         </div>
 
+        {/* Functional Pagination Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Showing</span>
+            <span className="text-sm font-medium text-foreground">{startIndex + 1}-{Math.min(endIndex, sortedInvoices?.length || 0)}</span>
+            <span className="text-sm text-muted-foreground">of {sortedInvoices?.length || 0}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(currentPage - 1)}
+              className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-muted"}
+            >
+              Previous
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage === 1) {
+                  pageNum = i + 1;
+                } else if (currentPage === totalPages) {
+                  pageNum = totalPages - 2 + i;
+                } else {
+                  pageNum = currentPage - 1 + i;
+                }
+                
+                return (
+                  <Button 
+                    key={pageNum}
+                    variant="outline" 
+                    size="sm" 
+                    className={`px-3 py-1 ${currentPage === pageNum ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(currentPage + 1)}
+              className={currentPage === totalPages || totalPages === 0 ? "opacity-50 cursor-not-allowed" : "hover:bg-muted"}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+
         {/* Invoice List */}
         {!invoices || invoices.length === 0 ? (
           <Card>
@@ -484,8 +554,8 @@ export default function InvoiceList() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4 mb-24">
-            {sortedInvoices.map((invoice) => (
+          <div className="max-h-[70vh] overflow-y-auto space-y-4 mb-24 pr-2">
+            {currentInvoices.map((invoice) => (
               <Card key={invoice.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-3 sm:p-4 md:p-6">
                   <div className="flex flex-col space-y-3 lg:flex-row lg:items-start lg:space-y-0 lg:gap-4">
@@ -597,26 +667,14 @@ export default function InvoiceList() {
                               <div className="space-y-1">
                                 <div className="flex justify-between items-center text-xs">
                                   <span className="text-yellow-700 dark:text-yellow-300">Partial Payment:</span>
-                                  <span className="text-yellow-800 dark:text-yellow-200 font-semibold" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
-                                    {invoice.amountPaid && parseFloat(invoice.amountPaid) > 0 ? formatNaira(parseFloat(invoice.amountPaid)) : '₦0.00'}
+                                  <span className="font-semibold text-yellow-800 dark:text-yellow-200" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
+                                    {formatNaira(parseFloat(invoice.amountPaid || '0'))}
                                   </span>
                                 </div>
-                                {(() => {
-                                  const amountPaid = parseFloat(invoice.amountPaid || '0');
-                                  const totalAmount = parseFloat(invoice.amount);
-                                  return amountPaid > 0 && amountPaid < totalAmount;
-                                })() && (
-                                  <div className="flex justify-between items-center text-xs">
-                                    <span className="text-yellow-700 dark:text-yellow-300">Balance Payment:</span>
-                                    <span className="text-yellow-800 dark:text-yellow-200 font-semibold" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
-                                      {formatNaira(parseFloat(invoice.amount) - parseFloat(invoice.amountPaid || '0'))}
-                                    </span>
-                                  </div>
-                                )}
                                 <div className="flex justify-between items-center text-xs">
-                                  <span className="text-yellow-700 dark:text-yellow-300">Date:</span>
-                                  <span className="text-yellow-800 dark:text-yellow-200 font-medium">
-                                    {invoice.updatedAt ? format(new Date(invoice.updatedAt), "MMM dd, yyyy") : 'N/A'}
+                                  <span className="text-yellow-700 dark:text-yellow-300">Remaining:</span>
+                                  <span className="font-semibold text-yellow-800 dark:text-yellow-200" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
+                                    {formatNaira(parseFloat(invoice.amount) - parseFloat(invoice.amountPaid || '0'))}
                                   </span>
                                 </div>
                               </div>
@@ -631,7 +689,7 @@ export default function InvoiceList() {
                             return hasWHTTransaction && amountPaid > 0;
                           })() && (
                             <div className="flex-1 max-w-xs p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
-                              <div className="font-medium text-xs text-green-700 dark:text-green-300 mb-2">Payment minus WHT</div>
+                              <div className="font-medium text-xs text-green-700 dark:text-green-300 mb-2">Payment + WHT</div>
                               <div className="space-y-1">
                                 <div className="flex justify-between items-center text-xs">
                                   <span className="text-green-700 dark:text-green-300">Total Payment:</span>

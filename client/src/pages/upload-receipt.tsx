@@ -1,10 +1,23 @@
 "use client";
 
+// ===== TYPE DECLARATIONS =====
+// Type declaration for global window object to handle scan limit modal
+declare global {
+  interface Window {
+    showScanLimitModal?: (data: {
+      scansUsed: number;
+      scansLimit: number;
+      userPlan: "freemium" | "premium";
+    }) => void;
+  }
+}
+
 // ===== IMPORTS =====
 // React hooks for component state management and lifecycle
 import { useState, useRef, useEffect } from "react";
 // Wouter hook for client-side navigation
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 // Application UI components
 import { Header } from "@/components/header";
 import { BottomNavigation } from "@/components/bottom-navigation";
@@ -48,9 +61,9 @@ interface UploadedFile {
 // ===== COMPONENT DEFINITION =====
 // Main upload receipt component for scanning and processing receipt images
 export default function UploadReceipt() {
-  // ===== HOOKS AND REFS =====
   const [, setLocation] = useLocation(); // Navigation hook for redirecting after successful upload
   const { toast } = useToast(); // Toast notification system for user feedback
+  const queryClient = useQueryClient(); // Query client for cache invalidation
   const fileInputRef = useRef<HTMLInputElement>(null); // Reference to file input element for programmatic access
 
   // ===== STATE MANAGEMENT =====
@@ -430,6 +443,49 @@ export default function UploadReceipt() {
     console.log("✅ Form validation passed");
 
     try {
+      // ===== SCAN LIMIT CHECK =====
+      // Check if user can scan before starting upload process
+      if (uploadedFiles.length > 0) {
+        console.log("🔍 Checking scan limits before upload...");
+        try {
+          const limitResponse = await fetch("/api/expenses/check-limit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          
+          const limitData = await limitResponse.json();
+          console.log("🔍 Scan limit check result:", limitData);
+          
+          if (!limitData.canScan) {
+            console.log("❌ Scan limit reached, showing upgrade modal");
+            // Show scan limit modal
+            if (window.showScanLimitModal) {
+              window.showScanLimitModal({
+                scansUsed: limitData.scansUsed,
+                scansLimit: limitData.scansLimit,
+                userPlan: "freemium"
+              });
+            } else {
+              // Fallback: redirect to subscription page
+              window.location.href = "/subscription";
+            }
+            return; // Stop the upload process
+          }
+          
+          console.log("✅ Scan limit check passed, proceeding with upload");
+        } catch (limitError) {
+          console.error("❌ Error checking scan limit:", limitError);
+          // Continue with upload but warn user
+          toast({
+            title: "Warning",
+            description: "Could not verify scan limit. Proceeding with upload...",
+            variant: "default",
+          });
+        }
+      }
+
       // ===== RECEIPT UPLOAD PROCESS =====
       // Upload receipt image to server if files exist
       let serverImageUrl = "";
@@ -460,6 +516,32 @@ export default function UploadReceipt() {
         if (!response.ok) {
           const errorText = await response.text();
           console.error("❌ Receipt upload failed:", errorText);
+          
+          // Handle scan limit errors specifically
+          if (response.status === 429) {
+            let errorData;
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              errorData = { message: errorText };
+            }
+            
+            if (errorData.canUpgrade) {
+              // Show scan limit modal
+              if (window.showScanLimitModal) {
+                window.showScanLimitModal({
+                  scansUsed: errorData.scansUsed,
+                  scansLimit: errorData.scansLimit,
+                  userPlan: "freemium"
+                });
+              } else {
+                // Fallback: redirect to subscription page
+                window.location.href = "/subscription";
+              }
+              return;
+            }
+          }
+          
           throw new Error(`Failed to upload receipt: ${response.status} - ${errorText}`);
         }
 
@@ -482,6 +564,9 @@ export default function UploadReceipt() {
         } else {
           console.log("✅ Server image URL received:", serverImageUrl);
         }
+        
+        // Refresh dashboard stats cache to update receipt count
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
         
         toast({ title: "Receipt Uploaded", description: result.message });
       } else {

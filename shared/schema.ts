@@ -29,6 +29,9 @@ export const users = pgTable("users", {
   subscriptionEndDate: timestamp("subscription_end_date"),
   monthlyScansUsed: text("monthly_scans_used").default("0").notNull(), // Reset monthly
   lastScanResetDate: timestamp("last_scan_reset_date").defaultNow().notNull(),
+  monthlyInvoicesUsed: text("monthly_invoices_used").default("0").notNull(), // Reset monthly
+  lastInvoiceResetDate: timestamp("last_invoice_reset_date").defaultNow().notNull(),
+  savingsGoalsCount: integer("savings_goals_count").default(0).notNull(), // Total savings goals created
   paystackCustomerCode: text("paystack_customer_code"),
   paystackSubscriptionCode: text("paystack_subscription_code"),
   paystackSubscriptionToken: text("paystack_subscription_token"),

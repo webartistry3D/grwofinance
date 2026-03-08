@@ -29,13 +29,6 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
     bgColor: 'bg-purple-100'
   },
   {
-    id: 'healthcare',
-    name: 'Healthcare',
-    icon: 'fas fa-pills',
-    color: 'text-green-600',
-    bgColor: 'bg-green-100'
-  },
-  {
     id: 'utilities',
     name: 'Utilities',
     icon: 'fas fa-bolt',
@@ -55,6 +48,48 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
     icon: 'fas fa-graduation-cap',
     color: 'text-indigo-600',
     bgColor: 'bg-indigo-100'
+  },
+  {
+    id: 'shopping',
+    name: 'Shopping',
+    icon: 'fas fa-shopping-bag',
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-100'
+  },
+  {
+    id: 'healthcare',
+    name: 'Healthcare',
+    icon: 'fas fa-pills',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100'
+  },
+  {
+    id: 'subscriptions',
+    name: 'Subscriptions',
+    icon: 'fas fa-sync',
+    color: 'text-cyan-600',
+    bgColor: 'bg-cyan-100'
+  },
+  {
+    id: 'personal',
+    name: 'Personal',
+    icon: 'fas fa-user',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-100'
+  },
+  {
+    id: 'business',
+    name: 'Business',
+    icon: 'fas fa-briefcase',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100'
+  },
+  {
+    id: 'categories',
+    name: 'Categories',
+    icon: 'fas fa-tags',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-100'
   },
   {
     id: 'other',

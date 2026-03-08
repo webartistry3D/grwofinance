@@ -224,7 +224,7 @@ export default function HeroSection({ className = "" }: HeroSectionProps) {
   const [shouldAnimateRating, setShouldAnimateRating] = useState(false);
 
   const animatedWords = [
-    "Your", "all-in-one", "Financial", "Assistant"
+    "Your", "all - in - one", "Financial", "Assistant"
   ];
   
   // Enhanced word-by-word animation (no loop)
@@ -292,15 +292,15 @@ export default function HeroSection({ className = "" }: HeroSectionProps) {
           background: "linear-gradient(135deg, #082118 0%, #29A378 100%)",
         }}
       >
-        <div className="relative px-4 sm:px-6 pt-1 sm:pt-12 pb-4 sm:pb-6 flex items-center min-h-[50vh] sm:min-h-[45vh] md:min-h-[40vh]">
+        <div className="relative px-3 sm:px-4 md:px-6 pt-1 sm:pt-12 pb-3 sm:pb-6 flex items-center min-h-[45vh] sm:min-h-[50vh] md:min-h-[40vh]">
           <div className="max-w-7xl mx-auto w-full">
             <div className="grid lg:grid-cols-[1fr_1fr] gap-6 lg:gap-8 items-center">
               {/* Left Content - Hero Text, Features, Benefits */}
-              <div className="space-y-2 sm:space-y-3 order-1 lg:order-1 relative z-20 text-center lg:text-left">
+              <div className="space-y-3 sm:space-y-3 order-1 lg:order-1 relative z-20 text-center lg:text-left">
                 {/* Animated Heading */}
                 <div className="typing-text-container">
-                  <div className="h-[8rem] sm:h-[8rem] md:h-[8rem] lg:h-[8rem] xl:h-[10rem] w-full max-w-none flex items-start sm:items-start justify-center lg:justify-start overflow-visible pt-2 sm:pt-0">
-                    <h1 className="text-3xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl text-white leading-tight w-full max-w-full roboto-slab-heading break-words text-center lg:text-left">
+                  <div className="h-[6rem] sm:h-[7rem] md:h-[8rem] lg:h-[8rem] xl:h-[10rem] w-full max-w-none flex items-start sm:items-start justify-center lg:justify-start overflow-visible pt-2 sm:pt-0">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl text-white leading-tight w-full max-w-full break-words text-center lg:text-left" style={{ fontFamily: '"Libre Baskerville", serif' }}>
                       <span
                         dangerouslySetInnerHTML={{
                           __html: displayText,
@@ -311,14 +311,14 @@ export default function HeroSection({ className = "" }: HeroSectionProps) {
                 </div>
 
                 {/* Rating Section - mobile optimized */}
-                <div className="pt-2 sm:pt-3 pb-2 flex flex-col items-center gap-3">
+                <div className="pt-10 sm:pt-3 pb-2 flex flex-col items-center gap-2 sm:gap-3">
                   {/* Stars and Customer Cards on same line */}
-                  <div className={`flex items-center gap-3 rating-container ${shouldAnimateRating ? 'animate' : ''}`}>
-                    <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-2 sm:gap-3 rating-container ${shouldAnimateRating ? 'animate' : ''}`}>
+                    <div className="flex items-center gap-1 sm:gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <svg
                           key={star}
-                          className={`star w-6 h-6 sm:w-7 sm:h-7 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}
+                          className={`star w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -328,29 +328,29 @@ export default function HeroSection({ className = "" }: HeroSectionProps) {
                     </div>
                     
                     {/* Customer Face Cards */}
-                    <div className="flex -space-x-3 sm:-space-x-4">
+                    <div className="flex -space-x-2 sm:-space-x-3 md:-space-x-4">
                       {/* Customer 1 */}
-                      <div className="face-card w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white flex items-center justify-center text-white text-xs font-semibold shadow-sm">
+                      <div className="face-card w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shadow-sm">
                         JD
                       </div>
                       {/* Customer 2 */}
-                      <div className="face-card w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white flex items-center justify-center text-white text-xs font-semibold shadow-sm">
+                      <div className="face-card w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shadow-sm">
                         SM
                       </div>
                       {/* Customer 3 */}
-                      <div className="face-card w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-green-400 to-green-600 border-2 border-white flex items-center justify-center text-white text-xs font-semibold shadow-sm">
+                      <div className="face-card w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-gradient-to-br from-green-400 to-green-600 border-2 border-white flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shadow-sm">
                         AK
                       </div>
                       {/* Customer 4 */}
-                      <div className="face-card w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-2 border-white flex items-center justify-center text-white text-xs font-semibold shadow-sm">
+                      <div className="face-card w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-2 border-white flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shadow-sm">
                         RT
                       </div>
                       {/* Customer 5 */}
-                      <div className="face-card w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 border-2 border-white flex items-center justify-center text-white text-xs font-semibold shadow-sm">
+                      <div className="face-card w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 border-2 border-white flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shadow-sm">
                         LM
                       </div>
                       {/* Customer 6 */}
-                      <div className="face-card w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 border-2 border-white flex items-center justify-center text-white text-xs font-semibold shadow-sm">
+                      <div className="face-card w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 border-2 border-white flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shadow-sm">
                         KW
                       </div>
                     </div>
@@ -358,8 +358,8 @@ export default function HeroSection({ className = "" }: HeroSectionProps) {
                   
                   {/* Customer count text - center aligned */}
                   <div className="text-center">
-                    <span className="text-white font-bold text-base sm:text-lg block sm:hidden">4.8 out of 5</span>
-                    <span className={`customer-count-text text-white/80 text-xs sm:text-sm ${shouldAnimateRating ? 'animate' : ''}`}>
+                    <span className="text-white font-bold text-sm sm:text-base block sm:hidden">4.8 out of 5</span>
+                    <span className={`customer-count-text text-white/80 text-[11px] sm:text-xs md:text-sm ${shouldAnimateRating ? 'animate' : ''}`}>
                       500+ happy customers
                     </span>
                   </div>
@@ -371,8 +371,8 @@ export default function HeroSection({ className = "" }: HeroSectionProps) {
                 </div>
 
                 {/* Features & Benefits - mobile optimized */}
-                <div className="pt-1 sm:pt-1 max-w-md lg:max-w-lg">
-                  <div className="flex flex-col gap-3">
+                <div className="pt-3 sm:pt-1 max-w-md lg:max-w-lg">
+                  <div className="flex flex-col gap-4 sm:gap-3">
                     {/* Features */}
                     <Accordion type="single" collapsible className="w-full">
                       <AccordionItem value="features" className="border-white/20">
@@ -410,7 +410,7 @@ export default function HeroSection({ className = "" }: HeroSectionProps) {
                 </div>
 
                 {/* Call to Action - mobile optimized */}
-                <div className="pt-2 sm:pt-1">
+                <div className="pt-4 sm:pt-2">
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-1 justify-center text-center lg:text-left lg:justify-start">
                     <Link href="/login" className="w-fit sm:w-auto mx-auto lg:mx-0">
                       <Button

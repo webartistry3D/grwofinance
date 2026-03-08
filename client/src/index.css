@@ -1,5 +1,24 @@
 /* ----------------------------------------------------
-   1. Import Local Exo 2 Font (Primary)
+   1. Import Libre Baskerville Variable Font (Primary)
+   ---------------------------------------------------- */
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/fonts/LibreBaskerville-VariableFont_wght.ttf") format("truetype");
+  font-weight: 300 800; /* Variable weight range */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/fonts/LibreBaskerville-Italic-VariableFont_wght.ttf") format("truetype");
+  font-weight: 300 800; /* Variable weight range */
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ----------------------------------------------------
+   2. Import Local Exo 2 Font (Secondary)
    ---------------------------------------------------- */
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800&display=swap');
 
@@ -134,9 +153,9 @@
   --sidebar-accent-foreground: hsl(215 16% 47%);
   --sidebar-border: hsl(214 32% 91%);
   --sidebar-ring: hsl(150 48% 46%);
-  --font-sans: "Exo 2", system-ui, sans-serif;
-  --font-display: "Exo 2", system-ui, sans-serif;
-  --font-serif: "Exo 2", system-ui, sans-serif;
+  --font-sans: "Libre Baskerville", "Exo 2", system-ui, serif;
+  --font-display: "Libre Baskerville", "Exo 2", system-ui, serif;
+  --font-serif: "Libre Baskerville", "Exo 2", system-ui, serif;
   --font-mono: "Share Tech Mono", monospace;
   --radius: 0.75rem;
 
@@ -234,7 +253,7 @@
   }
 
   body {
-    font-family: "Exo 2", "Montserrat", system-ui, sans-serif !important;
+    font-family: "Libre Baskerville", "Exo 2", "Montserrat", system-ui, serif !important;
     @apply antialiased bg-background text-foreground;
   }
 }

@@ -247,7 +247,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = getCurrentUser(req).id;
       
-      // Ensure Date object is a converted to a String
+      // Check scan limits if this expense includes a receipt image (indicating a scan)
+      if (req.body.imageUrl) {
+        const user = await storage.getUserById(userId);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        // Reset monthly scans if it's a new month
+        const now = new Date();
+        const lastReset = new Date(user.lastScanResetDate);
+        const isNewMonth = now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear();
+
+        if (isNewMonth) {
+          await storage.updateUser(userId, {
+            monthlyScansUsed: "0",
+            lastScanResetDate: now
+          });
+        }
+
+        const scansUsed = parseInt(user.monthlyScansUsed);
+        const scansLimit = user.subscriptionPlan === "premium" ? -1 : 5;
+
+        // Check if freemium user has reached limit
+        if (user.subscriptionPlan === "freemium" && scansUsed >= scansLimit) {
+          return res.status(429).json({ 
+            message: "Monthly scan limit reached. Upgrade to Premium for unlimited scans.",
+            scansUsed,
+            scansLimit,
+            canUpgrade: true
+          });
+        }
+
+        // Increment scan count for freemium users
+        if (user.subscriptionPlan === "freemium") {
+          const newScansUsed = scansUsed + 1;
+          await storage.updateUser(userId, {
+            monthlyScansUsed: newScansUsed.toString()
+          });
+          console.log(`📊 Incremented scan count for user ${userId}: ${scansUsed} -> ${newScansUsed}`);
+        }
+      }
+      
+      // Ensure Date object is converted to a String
       const requestBody = {
         ...req.body,
         date: req.body.date
@@ -414,11 +456,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = getCurrentUser(req).id;
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      // Fix week calculation to start from Monday
+      
+      // Fix week calculation to start from Monday and be more robust
       const currentDay = now.getDay();
       const daysSinceMonday = currentDay === 0 ? 6 : currentDay - 1; // Sunday = 0, so 6 days since Monday
-      const startOfWeek = new Date(now.getTime() - (daysSinceMonday * 24 * 60 * 60 * 1000));
-      startOfWeek.setHours(0, 0, 0, 0); // Start of day
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - daysSinceMonday);
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      // Ensure end date includes current day fully
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      const endOfWeek = new Date(now);
+      endOfWeek.setHours(23, 59, 59, 999); // Start of day
 
       // ✅ Incomes
       const totalIncome = await storage.getTotalIncome(userId);
@@ -429,34 +478,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const monthlyExpenses = await storage.getExpensesByDateRange(userId, startOfMonth, now);
       const weeklyExpenses = await storage.getExpensesByDateRange(userId, startOfWeek, now);
       
+      // Debug: Log the date ranges and results
+      console.log('=== Dashboard Stats Debug ===');
+      console.log('Current date:', now.toISOString());
+      console.log('Start of month:', startOfMonth.toISOString());
+      console.log('End of month:', endOfMonth.toISOString());
+      console.log('Start of week:', startOfWeek.toISOString());
+      console.log('End of week:', endOfWeek.toISOString());
+      console.log('Monthly expenses count:', monthlyExpenses.length);
+      console.log('Weekly expenses count:', weeklyExpenses.length);
+      console.log('Monthly expenses:', monthlyExpenses);
+      console.log('Weekly expenses:', weeklyExpenses);
+      
+      // Calculate actual totals including VAT
+      const monthlyExpensesTotal = monthlyExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount) + (parseFloat(expense.vatAmount) || 0), 0);
+      const weeklyExpensesTotal = weeklyExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount) + (parseFloat(expense.vatAmount) || 0), 0);
+      
+      console.log('Monthly total:', monthlyExpensesTotal);
+      console.log('Weekly total:', weeklyExpensesTotal);
+      console.log('=== End Dashboard Stats Debug ===');
+      
       // Calculate totals including VAT from expense data
       const allExpenses = await storage.getExpenses(userId);
-      const totalExpensesWithVAT = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount) + (parseFloat(e.vatAmount) || 0), 0);
-      const monthlyExpensesWithVAT = monthlyExpenses.reduce((sum, e) => sum + parseFloat(e.amount) + (parseFloat(e.vatAmount) || 0), 0);
-      const weeklyExpensesWithVAT = weeklyExpenses.reduce((sum, e) => sum + parseFloat(e.amount) + (parseFloat(e.vatAmount) || 0), 0);
-      const categoryTotals = await storage.getCategoryTotals(userId);
-      const recentTransactions = (await storage.getExpenses(userId)).slice(0, 10);
-
-      // Sums
-      const monthlyExpenseTotal = monthlyExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-      const weeklyExpenseTotal = weeklyExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-      const monthlyIncomeTotal = monthlyIncome.reduce((sum, i) => sum + parseFloat(i.amount), 0);
-      const weeklyIncomeTotal = weeklyIncome.reduce((sum, i) => sum + parseFloat(i.amount), 0);
+      
+      // Calculate category totals and receipt count
+      const categoryTotals: { [key: string]: number } = {};
+      let actualReceiptsCount = 0;
+      
+      allExpenses.forEach(expense => {
+        const category = expense.category || 'Other';
+        const amount = parseFloat(expense.amount) + (parseFloat(expense.vatAmount) || 0);
+        categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+        
+        // Count ALL expenses (scanned, uploaded, and manually typed)
+        actualReceiptsCount++;
+      });
+      
+      // Calculate monthly income total for net position
+      const monthlyIncomeTotal = monthlyIncome.reduce((sum, income) => sum + parseFloat(income.amount), 0);
       
       res.json({
         // Expenses
-        totalExpenses: totalExpensesWithVAT,
-        monthlyTotal: monthlyExpensesWithVAT, // Changed from monthlyIncomeTotal to match frontend
-        weeklyExpenses: weeklyExpensesWithVAT,
+        totalExpenses: totalExpenses,
+        monthlyTotal: monthlyExpensesTotal,
+        weeklyExpenses: weeklyExpensesTotal,
         // Incomes
         totalIncome,
-        monthlyIncome: monthlyIncomeTotal,
-        weeklyIncome: weeklyIncomeTotal,
-        netPosition: monthlyIncomeTotal - monthlyExpensesWithVAT,
+        monthlyIncome: monthlyIncome,
+        weeklyIncome: weeklyIncome,
+        netPosition: monthlyIncomeTotal - monthlyExpensesTotal,
         categoryTotals,
-        receiptCount: recentTransactions.length,
+        receiptCount: actualReceiptsCount,
         categoryCount: Object.keys(categoryTotals).length,
-        recentExpenses: recentTransactions.slice(0, 3).map(e => ({
+        recentExpenses: allExpenses.slice(0, 3).map(e => ({
           id: e.id,
           merchant: e.merchant,
           category: e.category,
@@ -464,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           date: new Date(e.date).toISOString().split("T")[0], // ✅ only YYYY-MM-DD
           vatAmount: parseFloat(e.vatAmount) || 0,
           vatRate: e.vatRate || "0%"
-        }))
+        })),
       });
     } catch (error) {
       console.error("Dashboard stats error:", error);
@@ -536,6 +610,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userId = getCurrentUser(req).id;
       
+      // Check scan limits before allowing upload
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Reset monthly scans if it's a new month
+      const now = new Date();
+      const lastReset = new Date(user.lastScanResetDate);
+      const isNewMonth = now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear();
+
+      if (isNewMonth) {
+        await storage.updateUser(userId, {
+          monthlyScansUsed: "0",
+          lastScanResetDate: now
+        });
+      }
+
+      const scansUsed = parseInt(user.monthlyScansUsed);
+      const scansLimit = user.subscriptionPlan === "premium" ? -1 : 5; // Updated to 5 to match subscription page
+
+      // Check if freemium user has reached limit
+      if (user.subscriptionPlan === "freemium" && scansUsed >= scansLimit) {
+        return res.status(429).json({ 
+          message: "Monthly scan limit reached. Upgrade to Premium for unlimited scans.",
+          scansUsed,
+          scansLimit,
+          canUpgrade: true
+        });
+      }
+      
       // Save image to storage and get the URL
       const storageResult = await storageAdapter.upload(req.file.buffer, req.file.originalname, req.file.mimetype, userId);
 
@@ -550,7 +655,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return only the image URL, not an expense record
       const responseObj = { 
         imageUrl: storageResult.url,
-        message: "Receipt uploaded successfully"
+        message: "Receipt uploaded successfully",
+        scansUsed: isNewMonth ? 0 : scansUsed,
+        scansLimit,
+        remainingScans: user.subscriptionPlan === "premium" ? -1 : (scansLimit - (isNewMonth ? 0 : scansUsed) - 1)
       };
       
       console.log("📸 Upload route returning:", responseObj);
@@ -961,8 +1069,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/invoices", isAuthenticated, async (req, res) => {
     try {
       const userId = getCurrentUser(req).id;
+      
+      // Check invoice limits for freemium users
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Reset monthly invoices if it's a new month
+      const now = new Date();
+      const lastReset = new Date(user.lastInvoiceResetDate);
+      const isNewMonth = now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear();
+
+      if (isNewMonth) {
+        await storage.updateUser(userId, {
+          monthlyInvoicesUsed: "0",
+          lastInvoiceResetDate: now
+        });
+      }
+
+      const invoicesUsed = parseInt(user.monthlyInvoicesUsed || "0");
+      const invoiceLimit = user.subscriptionPlan === "premium" ? -1 : 5;
+
+      // Check if freemium user has reached invoice limit
+      if (user.subscriptionPlan === "freemium" && invoicesUsed >= invoiceLimit) {
+        return res.status(429).json({ 
+          message: "Monthly invoice limit reached. Upgrade to Premium for unlimited invoices.",
+          invoicesUsed,
+          invoiceLimit,
+          canUpgrade: true
+        });
+      }
+
       const validatedData = insertInvoiceSchema.parse(req.body);
       const invoice = await storage.createInvoice(validatedData, userId);
+
+      // Increment invoice count for freemium users
+      if (user.subscriptionPlan === "freemium") {
+        const newInvoicesUsed = invoicesUsed + 1;
+        await storage.updateUser(userId, {
+          monthlyInvoicesUsed: newInvoicesUsed.toString()
+        });
+        console.log(`📊 Incremented invoice count for user ${userId}: ${invoicesUsed} -> ${newInvoicesUsed}`);
+      }
+
       res.status(201).json(invoice);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1288,7 +1438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For canceled subscriptions, show freemium plan details
       const displayPlan = user.subscriptionStatus === "canceled" ? "freemium" : user.subscriptionPlan;
       const displayEndDate = user.subscriptionStatus === "canceled" ? null : user.subscriptionEndDate;
-      const scansLimit = displayPlan === "premium" ? -1 : 10;
+      const scansLimit = displayPlan === "premium" ? -1 : 5; // Updated to 5 to match subscription page
       
       // Check if subscription is expiring soon (within 7 days)
       let isExpiringSoon = false;
@@ -1306,6 +1456,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         monthlyScansUsed: parseInt(user.monthlyScansUsed),
         scansLimit: scansLimit,
         lastScanResetDate: user.lastScanResetDate,
+        monthlyInvoicesUsed: parseInt(user.monthlyInvoicesUsed || "0"),
+        invoicesLimit: displayPlan === "premium" ? -1 : 5,
+        lastInvoiceResetDate: user.lastInvoiceResetDate,
+        savingsGoalsCount: user.savingsGoalsCount || 0,
+        savingsGoalsLimit: displayPlan === "premium" ? -1 : 1,
         isExpiringSoon: isExpiringSoon,
         paymentMethod: user.paystackCustomerCode ? { last4: "1234" } : null
       });
@@ -1434,19 +1589,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ 
           canScan: true, 
           scansUsed: 0, 
-          scansLimit: user.subscriptionPlan === "premium" ? -1 : 10,
+          scansLimit: user.subscriptionPlan === "premium" ? -1 : 5,
           message: "Monthly scans reset"
         });
       }
 
       const scansUsed = parseInt(user.monthlyScansUsed);
-      const scansLimit = user.subscriptionPlan === "premium" ? -1 : 10;
+      const scansLimit = user.subscriptionPlan === "premium" ? -1 : 5;
 
-      if (user.subscriptionPlan === "freemium" && scansUsed >= 10) {
+      if (user.subscriptionPlan === "freemium" && scansUsed >= scansLimit) {
         return res.json({ 
           canScan: false, 
           scansUsed, 
-          scansLimit: 10,
+          scansLimit: 5,
           message: "Monthly scan limit reached. Upgrade to Premium for unlimited scans."
         });
       }
@@ -1891,11 +2046,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Savings goal request body:", req.body);
       const user = getCurrentUser(req);
+      
+      // Check savings goals limits for freemium users
+      const userInfo = await storage.getUserById(user.id);
+      if (!userInfo) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const savingsGoalsCount = userInfo.savingsGoalsCount || 0;
+      const savingsGoalsLimit = userInfo.subscriptionPlan === "premium" ? -1 : 1;
+
+      // Check if freemium user has reached savings goals limit
+      if (userInfo.subscriptionPlan === "freemium" && savingsGoalsCount >= savingsGoalsLimit) {
+        return res.status(429).json({ 
+          message: "Savings goals limit reached. Upgrade to Premium for unlimited savings goals.",
+          savingsGoalsCount,
+          savingsGoalsLimit,
+          canUpgrade: true
+        });
+      }
+
       const goalData = insertSavingsGoalSchema.parse(req.body);
       console.log("Parsed goal data:", goalData);
       
       const goal = await storage.createSavingsGoal(goalData, user.id);
       console.log("Created goal:", goal);
+
+      // Increment savings goals count for freemium users
+      if (userInfo.subscriptionPlan === "freemium") {
+        const newSavingsGoalsCount = savingsGoalsCount + 1;
+        await storage.updateUser(user.id, {
+          savingsGoalsCount: newSavingsGoalsCount
+        });
+        console.log(`📊 Incremented savings goals count for user ${user.id}: ${savingsGoalsCount} -> ${newSavingsGoalsCount}`);
+      }
+
       res.status(201).json(goal);
     } catch (error) {
       console.error("Error creating savings goal:", error);
@@ -1935,12 +2120,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Delete request - User ID:", user.id);
       console.log("Delete request - Goal ID:", goalId);
       
+      // Get user info to update savings goals count
+      const userInfo = await storage.getUserById(user.id);
+      if (!userInfo) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       const success = await storage.deleteSavingsGoal(goalId, user.id);
       console.log("Delete result:", success);
       
       if (!success) {
         console.log("Goal not found, returning 404");
         return res.status(404).json({ message: "Savings goal not found" });
+      }
+      
+      // Decrement savings goals count for freemium users
+      if (userInfo.subscriptionPlan === "freemium" && userInfo.savingsGoalsCount > 0) {
+        const newSavingsGoalsCount = userInfo.savingsGoalsCount - 1;
+        await storage.updateUser(user.id, {
+          savingsGoalsCount: newSavingsGoalsCount
+        });
+        console.log(`📊 Decremented savings goals count for user ${user.id}: ${userInfo.savingsGoalsCount} -> ${newSavingsGoalsCount}`);
       }
       
       console.log("Goal deleted successfully, returning 204");

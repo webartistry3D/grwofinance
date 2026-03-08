@@ -11,7 +11,7 @@ import Footer from "@/components/landing/Footer";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden" style={{ fontFamily: '"Libre Baskerville", serif' }}>
       <Navbar />
       <HeroSection />
       <TrustedBrands />

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Target, Plus, Trash2, TrendingUp } from "lucide-react";
+import { ArrowLeft, Save, Target, Plus, Trash2, TrendingUp, Crown, AlertCircle } from "lucide-react";
 import { formatNaira } from "@/lib/currency";
 
 // Fetch wrapper for react-query
@@ -47,6 +47,8 @@ export default function SavingsGoals() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitErrorData, setLimitErrorData] = useState<any>(null);
 
   // Form state for new goal
   const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
@@ -104,11 +106,17 @@ export default function SavingsGoals() {
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add savings goal.",
-        variant: "destructive",
-      });
+      // Check if it's a limit error
+      if (error.message?.includes?.('Savings goals limit reached') || error.status === 429) {
+        setLimitErrorData(error);
+        setShowLimitModal(true);
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to add savings goal.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -455,6 +463,56 @@ export default function SavingsGoals() {
           )}
         </div>
       </main>
+
+      {/* Savings Goals Limit Modal */}
+      <AlertDialog open={showLimitModal} onOpenChange={setShowLimitModal}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              Savings Goals Limit Reached
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You've reached your savings goals limit of 1 goal. Upgrade to Premium to create unlimited savings goals.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <h4 className="font-semibold text-lg mb-3">Upgrade to Premium</h4>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                  <span>Unlimited savings goals</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                  <span>Goal tracking analytics</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                  <span>Priority support</span>
+                </li>
+              </ul>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => setLocation("/subscription")}
+                className="flex-1 bg-[#29A378] hover:bg-[#238c68]"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade to Premium
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setShowLimitModal(false)}
+                className="flex-1"
+              >
+                Maybe Later
+              </Button>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <BottomNavigation />
     </div>

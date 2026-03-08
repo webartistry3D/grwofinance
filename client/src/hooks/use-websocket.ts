@@ -51,21 +51,59 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
 
   // Get WebSocket URL
   const getWebSocketUrl = useCallback(() => {
+    console.log('=== WebSocket URL Construction Debug ===');
+    console.log('window.location:', window.location);
+    console.log('window.location.protocol:', window.location.protocol);
+    console.log('window.location.host:', window.location.host);
+    console.log('window.location.hostname:', window.location.hostname);
+    console.log('window.location.port:', window.location.port);
+    
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    return `${protocol}//${host}/ws`;
+    let host = window.location.host;
+    
+    console.log('Initial host value:', host);
+    console.log('Host type:', typeof host);
+    console.log('Host === undefined:', host === 'undefined');
+    console.log('Host === "undefined":', host === 'undefined');
+    
+    // More robust fallback for development environments
+    if (!host || host === 'undefined' || host.trim() === '') {
+      // Default to localhost:5000 for development
+      host = 'localhost:5000';
+      console.log('WebSocket: Using fallback host:', host);
+    }
+    
+    const wsUrl = `${protocol}//${host}/ws`;
+    console.log('Final WebSocket URL:', wsUrl);
+    console.log('=== End WebSocket URL Construction Debug ===');
+    return wsUrl;
   }, []);
 
   // Connect to WebSocket
   const connect = useCallback(() => {
+    console.log('=== WebSocket Connection Attempt ===');
+    console.log('Current WebSocket state:', wsRef.current?.readyState);
+    console.log('Connection timestamp:', new Date().toISOString());
+    
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected, skipping connection');
       return;
     }
 
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      const ws = new WebSocket(getWebSocketUrl());
+      const wsUrl = getWebSocketUrl();
+      
+      // Validate URL before creating WebSocket
+      if (!wsUrl || wsUrl.includes('undefined') || wsUrl.includes('null')) {
+        console.error('Invalid WebSocket URL detected:', wsUrl);
+        throw new Error(`Invalid WebSocket URL: ${wsUrl}`);
+      }
+      
+      console.log('WebSocket: Attempting connection to:', wsUrl);
+      console.log('Creating new WebSocket instance...');
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {

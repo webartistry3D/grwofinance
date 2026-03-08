@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { Header } from "@/components/header";
 import { BottomNavigation } from "@/components/bottom-navigation";
@@ -11,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { History, Search, Filter, Download, TrendingDown, Trash2, Eye, FileText } from "lucide-react";
+import { History, Search, Filter, Download, TrendingDown, Trash2, Eye, FileText, Crown } from "lucide-react";
 import { format } from "date-fns";
 import { formatNaira } from "@/lib/currency";
 import { EXPENSE_CATEGORIES } from "@/lib/categories";
@@ -21,6 +22,9 @@ import { generateReceiptPDF } from "@/lib/pdf-generator";
 import { Edit3 } from "lucide-react";
 
 export default function ExpenseHistory() {
+  const { user } = useAuth();
+  const isPremium = (user as any)?.subscriptionPlan === "premium";
+  
   // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -207,7 +211,7 @@ export default function ExpenseHistory() {
 
   return (
     <div className="w-full max-w-none md:max-w-4xl lg:max-w-6xl mx-auto bg-background min-h-screen">
-      <Header title="Recent Expenses" showBack={true} backHref="/expense-manager" />
+      <Header title="Expenses" showBack={true} backHref="/expense-manager" />
 
       <main className="pb-20 px-4 py-6">
         {/* Summary Card */}
@@ -365,13 +369,23 @@ export default function ExpenseHistory() {
                                       }}
                                       className="text-xs"
                                     >
-                                      View Original Image
+                                      <Eye className="w-3 h-3 mr-1" />
+                                      View Receipt
                                     </Button>
                                   )}
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
+                                      if (!isPremium) {
+                                        toast({
+                                          title: "Premium Feature",
+                                          description: "PDF downloads are available for Premium subscribers only.",
+                                          variant: "destructive",
+                                        });
+                                        return;
+                                      }
+                                      
                                       const link = document.createElement('a');
                                       link.href = generateReceiptPDF(expense);
                                       link.download = `receipt-${expense.merchant.replace(/\s+/g, '-').toLowerCase()}-${format(new Date(expense.date), 'yyyy-MM-dd')}.pdf`;
@@ -387,7 +401,7 @@ export default function ExpenseHistory() {
                                     className="text-xs"
                                   >
                                     <Download className="w-3 h-3 mr-1" />
-                                    Download PDF
+                                    {isPremium ? "Download PDF" : "Premium"}
                                   </Button>
                                 </div>
                               </div>

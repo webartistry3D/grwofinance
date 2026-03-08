@@ -5,15 +5,25 @@ import { Link } from "wouter";
 import { Header } from "@/components/header";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNaira } from "@/lib/currency";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton"; // if you’re using shadcn/ui Skeleton
 import { 
   Camera, Upload, Edit3, TrendingDown, 
   Receipt, History, BarChart3, Settings, 
-  ShoppingCart, Car, Zap, ChevronDown, FileText, Shield
+  ShoppingCart, Car, Zap, ChevronDown, FileText, Shield, PieChart as PieChartIcon
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+} from "recharts";
+
+type TimePeriod = 'daily' | 'last7days' | 'last30days' | 'yearly';
 
 interface ExpenseStats {
   totalExpenses: number;
@@ -36,6 +46,7 @@ interface ExpenseStats {
 export default function ExpenseManager() {
   const [, setLocation] = useLocation();
   const [expandedExpense, setExpandedExpense] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('last30days');
 
   // Scroll to top when page loads
   useEffect(() => {
@@ -50,12 +61,26 @@ export default function ExpenseManager() {
 
   // Only use real data from API - no fallback to mock data
   const stats: ExpenseStats = {
-    totalExpenses: (expenseStats && typeof expenseStats === 'object' && 'totalExpenses' in expenseStats ? Number(expenseStats.totalExpenses) : 0),
-    monthlyExpenses: (expenseStats && typeof expenseStats === 'object' && 'monthlyExpenses' in expenseStats ? Number(expenseStats.monthlyExpenses) : 0),
+    totalExpenses: (expenseStats && typeof expenseStats === 'object' && 'recentExpenses' in expenseStats && Array.isArray(expenseStats.recentExpenses) 
+      ? expenseStats.recentExpenses.reduce((sum, e) => sum + parseFloat(e.amount) + parseFloat(e.vatAmount || '0'), 0)
+      : (expenseStats && typeof expenseStats === 'object' && 'totalExpenses' in expenseStats ? Number(expenseStats.totalExpenses) : 0)),
+    monthlyExpenses: (expenseStats && typeof expenseStats === 'object' && 'monthlyTotal' in expenseStats ? Number(expenseStats.monthlyTotal) : 0),
     weeklyExpenses: (expenseStats && typeof expenseStats === 'object' && 'weeklyExpenses' in expenseStats ? Number(expenseStats.weeklyExpenses) : 0),
     receiptCount: (expenseStats && typeof expenseStats === 'object' && 'receiptCount' in expenseStats ? Number(expenseStats.receiptCount) : 0),
     recentExpenses: (expenseStats && typeof expenseStats === 'object' && 'recentExpenses' in expenseStats ? Array.isArray(expenseStats.recentExpenses) ? expenseStats.recentExpenses : [] : []), // <- always fallback to array
   };
+
+  // Calculate expense breakdown for piechart
+  const COLORS = ['#EA580C', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#F97316'];
+  const categoryTotals = (expenseStats as any)?.categoryTotals || {};
+  
+  // For now, use the existing categoryTotals but add period filtering logic
+  // In a real implementation, we'd need all expenses with dates to filter by period
+  const expenseBreakdown = Object.entries(categoryTotals).map(([category, amount], idx) => ({
+    category,
+    amount: Number(amount),
+    color: COLORS[idx % COLORS.length],
+  }));
 
   return (
     <div className="w-full max-w-none md:max-w-4xl lg:max-w-6xl mx-auto bg-background min-h-screen">
@@ -132,12 +157,12 @@ export default function ExpenseManager() {
             </CardContent>
           </Card>
 
-          {/* Receipts Scanned */}
+          {/* Total Receipts */}
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Receipts Scanned</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Receipts</p>
                   {isLoading ? (
                     <Skeleton className="h-8 w-24 mt-1" />
                   ) : (
@@ -204,7 +229,7 @@ export default function ExpenseManager() {
             </Link>
 
             <Link
-              href="/expense-reports"
+              href="/expense-history"
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             >
               <Button
@@ -214,6 +239,19 @@ export default function ExpenseManager() {
               >
                 <FileText className="h-5 w-5 text-orange-600" />
                 <span className="text-xs">Reports</span>
+              </Button>
+            </Link>
+            <Link
+              href="/expense-history"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            >
+              <Button
+                variant="outline"
+                className="h-16 flex flex-col items-center justify-center space-y-1 w-full hover:bg-[#29A378] hover:text-white hover:border-[#29A378]"
+                data-testid="button-expenses"
+              >
+                <TrendingDown className="h-5 w-5 text-red-600" />
+                <span className="text-xs">Expenses</span>
               </Button>
             </Link>
 
@@ -351,6 +389,112 @@ export default function ExpenseManager() {
                 </Card>
               )}
             </div>
+          </section>
+
+          {/* Right 50% - Expense Breakdown Pie Chart */}
+          <section className="lg:w-full">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold">Expense Breakdown</h2>
+                </div>
+                
+                {/* Time Period Selection Buttons */}
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    variant={selectedPeriod === 'daily' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedPeriod('daily')}
+                  >
+                    Daily
+                  </Button>
+                  <Button
+                    variant={selectedPeriod === 'last7days' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedPeriod('last7days')}
+                  >
+                    Last 7 Days
+                  </Button>
+                  <Button
+                    variant={selectedPeriod === 'last30days' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedPeriod('last30days')}
+                  >
+                    Last 30 Days
+                  </Button>
+                  <Button
+                    variant={selectedPeriod === 'yearly' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedPeriod('yearly')}
+                  >
+                    Yearly
+                  </Button>
+                </div>
+                
+                {expenseBreakdown.length > 0 ? (
+                  <div className="h-80 flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie 
+                          data={expenseBreakdown} 
+                          cx="50%" 
+                          cy="50%" 
+                          innerRadius={60} 
+                          outerRadius={100} 
+                          dataKey="amount" 
+                          stroke="#fff" 
+                          strokeWidth={2}
+                          startAngle={90}
+                          endAngle={-270}
+                          animationBegin={0}
+                          animationDuration={800}
+                          label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                          labelLine={false}
+                        >
+                          {expenseBreakdown.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.color}
+                              style={{
+                                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                                cursor: 'pointer'
+                              }}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value: number, name: string, props: any) => [
+                            formatNaira(value),
+                            props.payload.category || name
+                          ]}
+                          labelStyle={{ color: "#333", fontWeight: "bold" }}
+                          contentStyle={{
+                            backgroundColor: "rgba(255,255,255,0.95)",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "12px",
+                            boxShadow: "0 8px 16px rgba(0, 0, 0, 0.15)",
+                            padding: "12px"
+                          }}
+                        />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36}
+                          formatter={(value: string, entry: any) => (
+                            <span style={{ color: entry.color, fontWeight: 'bold' }}>
+                              {value}
+                            </span>
+                          )}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-80 flex items-center justify-center text-center">
+                    <p className="text-muted-foreground">No expense data available</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </section>
         </div>
       </main>
