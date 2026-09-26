@@ -66,8 +66,8 @@ export function BottomNavigation() {
               data-testid={`nav-${item.label.toLowerCase()}`}
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
-              <IconComponent className="w-5 h-5 lg:w-6 lg:h-6 mb-1" />
-              <span className="text-xs lg:text-sm font-medium">{item.label}</span>
+              <IconComponent className="w-5 h-5 lg:w-6 lg:h-6 mb-0 lg:mb-1" />
+              <span className="text-xs lg:text-sm font-medium hidden sm:inline">{item.label}</span>
             </Link>
           );
         })}

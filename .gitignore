@@ -56,3 +56,14 @@ Thumbs.db
 
 migrations/
 primary-font-style/
+
+add_amount_paid_column.sql
+add_invoice_limits.sql
+add_savings_goals_limits.sql
+ADMIN_DASHBOARD_LAYOUT_UPDATE.md
+ADMIN_DASHBOARD_TOTAL_EXPENSES_REMOVAL.md
+ADMIN_GUIDE_TAX_MANAGEMENT.md
+API_DOCUMENTATION.md
+ASSETS_BREAKDOWN_DEBUGGING.md
+ASSETS_BREAKDOWN_DISPLAY_FIX.md
+ASSETS_LIABILITIES_CHART_TABS.md

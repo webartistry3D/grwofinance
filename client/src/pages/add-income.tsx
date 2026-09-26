@@ -98,8 +98,10 @@ export default function ManualIncomeManager() {
       }
     },
     retry: false,
-    staleTime: 0, // No caching - always fresh data
-    refetchInterval: 1000 * 60 * 2, // Refetch every 2 minutes
+    staleTime: 1000 * 60 * 5, // Data fresh for 5 minutes
+    refetchInterval: false, // Disable automatic refetching to prevent unwanted refreshes
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
 
   // Transform API data to ManualIncome[] (exclude invoice-derived)

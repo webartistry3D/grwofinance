@@ -19,27 +19,6 @@ import { useSettings } from "@/hooks/use-settings";
 import { useToast } from "@/hooks/use-toast";
 import { FeedbackModal } from "@/components/feedback-modal";
 import { WhatsAppBusiness } from "@/components/whatsapp-business";
-import { 
-  User, 
-  Bell, 
-  Shield, 
-  HelpCircle, 
-  Info, 
-  LogOut,
-  Camera,
-  Moon,
-  Download,
-  Crown,
-  Loader2,
-  IndianRupee,
-  MessageCircle,
-  TrendingUp,
-  Settings as SettingsIcon,
-  Target,
-  Wallet,
-  CreditCard,
-  BookOpen
-} from "lucide-react";
 
 export default function Settings() {
   const { user, isAdmin, logout, isLoggingOut } = useAuth();
@@ -110,24 +89,24 @@ export default function Settings() {
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center relative" style={{backgroundColor: '#29A378'}}>
-                  <User className="w-8 h-8 text-white" />
+                  <span className="text-white text-2xl font-bold">{userDisplayName.charAt(0).toUpperCase()}</span>
                   {isAdmin && (
                     <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                      <Crown className="w-3 h-3 text-white" />
+                      <span className="text-white text-xs font-bold">A</span>
                     </div>
                   )}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-lg">{userDisplayName}</h3>
+                    <h3 className="font-semibold text-lg sm:text-lg">{userDisplayName}</h3>
                     {isAdmin && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs sm:text-xs">
                         Admin
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">{user?.email}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-base sm:text-base text-gray-600">{user?.email}</p>
+                  <p className="text-sm sm:text-sm text-gray-400 mt-1">
                     Member since {user?.createdAt ? new Date(user.createdAt).getFullYear() : 'recently'}
                   </p>
                 </div>
@@ -143,14 +122,11 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="text-lg">App Settings</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 p-4">
+            <CardContent className="space-y-6 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3 flex-1 min-w-0 pr-4">
-                  <Bell className="w-6 h-6 text-foreground flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground">Push Notifications</p>
-                    <p className="text-sm text-muted-foreground">Get notified about budget alerts</p>
-                  </div>
+                  <p className="font-medium text-foreground">Push Notifications</p>
+                  <p className="text-sm text-muted-foreground">Get notified about budget alerts</p>
                 </div>
                 <Switch 
                   checked={settings.pushNotifications}
@@ -162,11 +138,8 @@ export default function Settings() {
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3 flex-1 min-w-0 pr-4">
-                  <Camera className="w-6 h-6 text-foreground flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground">Auto-Capture</p>
-                    <p className="text-sm text-muted-foreground">Automatically detect receipts</p>
-                  </div>
+                  <p className="font-medium text-foreground">Auto-Capture</p>
+                  <p className="text-sm text-muted-foreground">Automatically detect receipts</p>
                 </div>
                 <Switch 
                   checked={settings.autoCapture}
@@ -186,21 +159,20 @@ export default function Settings() {
         <section className="col-span-1 h-full">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg sm:text-lg flex items-center gap-2">
                 Financial Settings
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 p-4">
+            <CardContent className="space-y-6 p-4">
               <Link href="/budget-settings">
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent"
+                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                   data-testid="button-budget-settings"
                 >
-                  <div className="w-6 h-6 mr-3 flex items-center justify-center font-bold text-lg" style={{color: '#29A378'}}>₦</div>
                   <div className="text-left flex-1">
-                    <p className="font-medium text-foreground">Budget Settings</p>
-                    <p className="text-sm text-muted-foreground">Set monthly spending limits</p>
+                    <p className="font-medium text-base sm:font-medium text-foreground">Budget Settings</p>
+                    <p className="text-base sm:text-sm text-muted-foreground">Set spending limits</p>
                   </div>
                 </Button>
               </Link>
@@ -208,13 +180,12 @@ export default function Settings() {
               <Link href="/savings-goals">
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent"
+                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                   data-testid="button-savings-goals"
                 >
-                  <div className="w-6 h-6 mr-3 flex items-center justify-center font-bold text-lg" style={{color: '#29A378'}}>🎯</div>
                   <div className="text-left flex-1">
-                    <p className="font-medium text-foreground">Savings Goals</p>
-                    <p className="text-sm text-muted-foreground">Track and manage savings targets</p>
+                    <p className="font-medium text-base sm:font-medium text-foreground">Savings Goals</p>
+                    <p className="text-base sm:text-sm text-muted-foreground">Track savings targets</p>
                   </div>
                 </Button>
               </Link>
@@ -222,15 +193,12 @@ export default function Settings() {
               <Link href="/income-settings">
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent"
+                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                   data-testid="button-income-settings"
                 >
-                  <div className="w-6 h-6 mr-3 flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6" style={{color: '#29A378'}} />
-                  </div>
                   <div className="text-left flex-1">
-                    <p className="font-medium text-foreground">Business Settings</p>
-                    <p className="text-sm text-muted-foreground">Edit business information</p>
+                    <p className="font-medium text-base sm:font-medium text-foreground">Business Settings</p>
+                    <p className="text-base sm:text-sm text-muted-foreground">Review business information</p>
                   </div>
                 </Button>
               </Link>
@@ -241,9 +209,6 @@ export default function Settings() {
                   className="w-full justify-start px-4 py-3 h-auto hover:bg-accent"
                   data-testid="button-expense-categories"
                 >
-                  <div className="w-6 h-6 mr-3 flex items-center justify-center">
-                    <SettingsIcon className="w-6 h-6" style={{color: '#EA580C'}} />
-                  </div>
                   <div className="text-left flex-1">
                     <p className="font-medium text-foreground">Expense Categories</p>
                     <p className="text-sm text-muted-foreground">Manage expense categories</p>
@@ -260,36 +225,30 @@ export default function Settings() {
         <section className="col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Data & Privacy</CardTitle>
+              <CardTitle className="text-lg sm:text-lg">Data & Privacy</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 p-4">
+            <CardContent className="space-y-6 p-4">
               <Button 
                 variant="ghost" 
-                className="w-full justify-start px-4 py-3 h-auto"
+                className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                 onClick={handleExportData}
                 data-testid="button-export-data"
               >
-                <div className="w-6 h-6 mr-3 flex items-center justify-center">
-                  <Download className="w-6 h-6 text-foreground" />
-                </div>
                 <div className="text-left">
-                  <p className="font-medium text-foreground">Export Data</p>
-                  <p className="text-sm text-muted-foreground">Download your income & expense data</p>
+                  <p className="font-medium text-base sm:font-medium text-foreground">Export Data</p>
+                  <p className="text-base sm:text-sm text-muted-foreground">Income & expenses</p>
                 </div>
               </Button>
               
               <Link href="/privacy-settings">
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start px-4 py-3 h-auto"
+                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                   data-testid="button-privacy-settings"
                 >
-                  <div className="w-6 h-6 mr-3 flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-foreground" />
-                  </div>
                   <div className="text-left">
-                    <p className="font-medium text-foreground">Privacy Settings</p>
-                    <p className="text-sm text-muted-foreground">Control your data usage</p>
+                    <p className="font-medium text-base sm:font-medium text-foreground">Privacy Settings</p>
+                    <p className="text-base sm:text-sm text-muted-foreground">Control your data usage</p>
                   </div>
                 </Button>
               </Link>
@@ -301,21 +260,18 @@ export default function Settings() {
         <section className="col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Support & Help</CardTitle>
+              <CardTitle className="text-lg sm:text-lg">Support & Help</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 p-4">
+            <CardContent className="space-y-6 p-4">
               <Link href="/help-center">
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start px-4 py-3 h-auto"
+                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                   data-testid="button-help-center"
                 >
-                  <div className="w-6 h-6 mr-3 flex items-center justify-center">
-                    <HelpCircle className="w-6 h-6 text-foreground" />
-                  </div>
                   <div className="text-left">
-                    <p className="font-medium text-foreground">Help Center</p>
-                    <p className="text-sm text-muted-foreground">FAQs and tutorials</p>
+                    <p className="font-medium text-base sm:font-medium text-foreground">Help Center</p>
+                    <p className="text-base sm:text-sm text-muted-foreground">FAQs and tutorials</p>
                   </div>
                 </Button>
               </Link>
@@ -324,15 +280,12 @@ export default function Settings() {
                 <Link href="/api-docs">
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-start px-4 py-3 h-auto"
+                    className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                     data-testid="button-api-docs"
                   >
-                    <div className="w-6 h-6 mr-3 flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-foreground" />
-                    </div>
                     <div className="text-left">
-                      <p className="font-medium text-foreground">API Documentation</p>
-                      <p className="text-sm text-muted-foreground">Developer resources</p>
+                      <p className="font-medium text-base sm:font-medium text-foreground">API Documentation</p>
+                      <p className="text-base sm:text-sm text-muted-foreground">Developer resources</p>
                     </div>
                   </Button>
                 </Link>
@@ -341,15 +294,12 @@ export default function Settings() {
               <Link href="/contact-support">
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start px-4 py-3 h-auto"
+                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                   data-testid="button-contact-support"
                 >
-                  <div className="w-6 h-6 mr-3 rounded flex items-center justify-center bg-muted">
-                    <span className="text-sm font-bold text-foreground">@</span>
-                  </div>
                   <div className="text-left">
-                    <p className="font-medium text-foreground">Contact Support</p>
-                    <p className="text-sm text-muted-foreground">Get help from our team</p>
+                    <p className="font-medium text-base sm:font-medium text-foreground">Contact Support</p>
+                    <p className="text-base sm:text-sm text-muted-foreground">Get help from our team</p>
                   </div>
                 </Button>
               </Link>
@@ -364,7 +314,6 @@ export default function Settings() {
                       className="w-fit px-4 py-2"
                       data-testid="button-feedback"
                     >
-                      <MessageCircle className="w-4 h-4 mr-2" />
                       Feedback
                     </Button>
                   }
@@ -378,7 +327,6 @@ export default function Settings() {
                       style={{ backgroundColor: '#25D366' }}
                       data-testid="button-whatsapp-support"
                     >
-                      <MessageCircle className="w-4 h-4 mr-2" />
                       WhatsApp
                     </Button>
                   }
@@ -393,7 +341,7 @@ export default function Settings() {
         <section className="col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg sm:text-lg flex items-center gap-2">
                 Subscription
               </CardTitle>
             </CardHeader>
@@ -401,50 +349,42 @@ export default function Settings() {
               <Link href="/subscription">
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent"
+                  className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                   data-testid="button-subscription"
                 >
-                  <div className="w-6 h-6 mr-3 flex items-center justify-center">
-                    <CreditCard className="w-6 h-6" style={{color: '#29A378'}} />
-                  </div>
                   <div className="text-left flex-1">
-                    <p className="font-medium" style={{color: '#29A378'}}>Manage Subscription</p>
-                    <p className="text-sm" style={{color: '#29A378', opacity: 0.7}}>Billing & plan details</p>
+                    <p className="font-medium text-base sm:font-medium" style={{color: '#29A378'}}>Manage Subscription</p>
+                    <p className="text-base sm:text-sm" style={{color: '#29A378', opacity: 0.7}}>Billing & plan details</p>
                   </div>
                 </Button>
               </Link>
               
               <Button 
                 variant="ghost" 
-                className="w-full justify-start px-4 py-3 h-auto"
+                className="w-full justify-start px-4 py-3 h-auto hover:bg-accent hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 mb-4 transition-colors duration-200"
                 onClick={handleAbout}
                 data-testid="button-about"
               >
-                <div className="w-6 h-6 mr-3 flex items-center justify-center">
-                  <Info className="w-6 h-6 text-foreground" />
-                </div>
                 <div className="text-left">
-                  <p className="font-medium text-foreground">About GrwoFinance</p>
-                  <p className="text-sm text-muted-foreground">Version 1.0.0</p>
+                  <p className="font-medium text-base sm:font-medium text-foreground">About GrwoFinance</p>
+                  <p className="text-base sm:text-sm text-muted-foreground">Version 1.0.0</p>
                 </div>
               </Button>
               
               {/* Sign Out Button */}
               <div className="flex justify-end mt-4">
                 <Button 
-                  className="bg-red-500 text-white py-2 px-4 rounded-xl font-semibold hover:bg-red-600 shadow-lg text-sm"
+                  className="bg-red-500 text-white py-2 px-4 rounded-xl font-semibold hover:bg-red-600 shadow-lg text-base sm:text-base"
                   onClick={handleLogout}
                   disabled={isLoggingOut}
                   data-testid="button-sign-out"
                 >
                   {isLoggingOut ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Signing Out...
                     </>
                   ) : (
                     <>
-                      <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
                     </>
                   )}
@@ -467,7 +407,6 @@ export default function Settings() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <LogOut className="w-5 h-5 text-red-500" />
               Sign Out
             </DialogTitle>
             <DialogDescription>
@@ -489,12 +428,10 @@ export default function Settings() {
             >
               {isLoggingOut ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Signing Out...
                 </>
               ) : (
                 <>
-                  <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </>
               )}

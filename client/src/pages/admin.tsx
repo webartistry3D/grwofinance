@@ -38,7 +38,6 @@ interface AdminStats {
   totalUsers: number;
   activeUsers: number;
   paidUsers: number;
-  totalExpenses: number;
   monthlyRevenue: number;
   newUsersThisMonth: number;
   averageSpending: number;
@@ -233,7 +232,7 @@ export default function Admin() {
 
           <TabsContent value="overview" className="px-4 space-y-4 max-w-full">
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-full">
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -284,24 +283,6 @@ export default function Admin() {
                       </p>
                     </div>
                     <Crown className="w-8 h-8" style={{ color: '#059669' }} />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Expenses</p>
-                      <p 
-                        className="text-3xl font-bold"
-                        style={{ color: '#059669', fontFamily: '"Share Tech Mono", monospace' }}
-                        data-testid="text-total-platform-expenses"
-                      >
-                        {formatNaira(adminStats?.totalExpenses || 0)}
-                      </p>
-                    </div>
-                    <Banknote className="w-8 h-8" style={{ color: '#059669' }} />
                   </div>
                 </CardContent>
               </Card>

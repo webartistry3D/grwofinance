@@ -553,8 +553,10 @@ export default function GlobalDashboard() {
         if (!res.ok) throw new Error("Failed to fetch savings");
         return res.json();
       },
-      staleTime: 1000 * 60 * 2, // 2 minutes
-      refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchInterval: false, // Disable automatic refetching to prevent unwanted refreshes
+      refetchOnWindowFocus: false, // Don't refetch when window gains focus
+      refetchOnReconnect: false, // Don't refetch on reconnect
     });
 
   const { data: netWorthHistory, isLoading: isNetWorthLoading } = useQuery({
@@ -922,26 +924,28 @@ export default function GlobalDashboard() {
           </Card>
         </section>
 
-        {/* Expense Breakdown Pie Chart */}
+        {/* Expense Breakdown Pie Chart - Mobile Optimized */}
         <section className="mb-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChartIcon className="h-5 w-5" />
-                Expense Breakdown
+            <CardHeader className="pb-3">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-base sm:text-lg">
+                <div className="flex items-center gap-2">
+                  <PieChartIcon className="h-5 w-5" />
+                  Expense Breakdown
+                </div>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="h-80 flex items-center justify-center">
+            <CardContent className="pt-0">
+              <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6">
+                <div className="h-80 sm:h-80 flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie 
                         data={currentStats.expenseBreakdown} 
                         cx="50%" 
                         cy="50%" 
-                        innerRadius={60} 
-                        outerRadius={120} 
+                        innerRadius={window.innerWidth < 640 ? 50 : 80} 
+                        outerRadius={window.innerWidth < 640 ? 100 : 140} 
                         dataKey="amount" 
                         stroke="#fff" 
                         strokeWidth={2}
@@ -949,8 +953,14 @@ export default function GlobalDashboard() {
                         endAngle={-270}
                         animationBegin={0}
                         animationDuration={800}
-                        label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                        label={({ category, percent }) => {
+  const isMobile = window.innerWidth < 640;
+  const labelText = isMobile ? `${(percent * 100).toFixed(0)}%` : `${category} ${(percent * 100).toFixed(0)}%`;
+  return labelText;
+}}
                         labelLine={false}
+                        fontSize={window.innerWidth >= 640 ? 14 : 12}
+                        fontWeight="bold"
                       >
                         {currentStats.expenseBreakdown.map((entry, index) => (
                           <Cell 
@@ -976,15 +986,6 @@ export default function GlobalDashboard() {
                           boxShadow: "0 8px 16px rgba(0, 0, 0, 0.15)",
                           padding: "12px"
                         }}
-                      />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        height={36}
-                        formatter={(value: string, entry: any) => (
-                          <span style={{ color: entry.color, fontWeight: 'bold' }}>
-                            {value}
-                          </span>
-                        )}
                       />
                     </PieChart>
                   </ResponsiveContainer>

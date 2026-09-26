@@ -341,17 +341,18 @@ export default function ExpenseManager() {
         */}
 
 
-        {/* Main Content - Two 50% Sections Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Main Content - Responsive Layout */}
+        <div className="space-y-6 mb-6">
           
-          {/* Left 50% - Recent Expenses */}
+          {/* Recent Expenses - Full width on mobile */}
           <section className="lg:w-full">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
               <h2 className="text-lg font-semibold">Recent Expenses</h2>
               <Link href="/expense-history">
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="w-full sm:w-auto"
                   data-testid="link-view-all-expenses"
                 >
                   View All
@@ -363,19 +364,19 @@ export default function ExpenseManager() {
               {Array.isArray(stats.recentExpenses) && stats.recentExpenses.length > 0 ? (
                 stats.recentExpenses.map((expense) => (
                   <Card key={expense.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: 'rgba(234, 88, 12, 0.1)'}}>
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{backgroundColor: 'rgba(234, 88, 12, 0.1)'}}>
                             <TrendingDown className="h-5 w-5" style={{color: '#EA580C'}} />
                           </div>
-                          <div>
-                            <p className="font-medium" data-testid={`text-expense-merchant-${expense.id}`}>{expense.merchant}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm sm:text-base truncate" data-testid={`text-expense-merchant-${expense.id}`}>{expense.merchant}</p>
                             <p className="text-sm text-muted-foreground">{expense.date}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold" style={{ fontFamily: '"Share Tech Mono", monospace' }} data-testid={`text-expense-amount-${expense.id}`}>
+                          <p className="font-semibold text-sm sm:text-base" style={{ fontFamily: '"Share Tech Mono", monospace' }} data-testid={`text-expense-amount-${expense.id}`}>
                             {formatNaira(expense.amount)}
                           </p>
                         </div>
@@ -391,20 +392,21 @@ export default function ExpenseManager() {
             </div>
           </section>
 
-          {/* Right 50% - Expense Breakdown Pie Chart */}
+          {/* Expense Breakdown - Full width on mobile */}
           <section className="lg:w-full">
             <Card>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
                   <h2 className="text-lg font-semibold">Expense Breakdown</h2>
                 </div>
                 
-                {/* Time Period Selection Buttons */}
-                <div className="flex gap-2 mb-4">
+                {/* Time Period Selection Buttons - Responsive */}
+                <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 mb-4">
                   <Button
                     variant={selectedPeriod === 'daily' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedPeriod('daily')}
+                    className="text-xs"
                   >
                     Daily
                   </Button>
@@ -412,35 +414,38 @@ export default function ExpenseManager() {
                     variant={selectedPeriod === 'last7days' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedPeriod('last7days')}
+                    className="text-xs"
                   >
-                    Last 7 Days
+                    7 Days
                   </Button>
                   <Button
                     variant={selectedPeriod === 'last30days' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedPeriod('last30days')}
+                    className="text-xs"
                   >
-                    Last 30 Days
+                    30 Days
                   </Button>
                   <Button
                     variant={selectedPeriod === 'yearly' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedPeriod('yearly')}
+                    className="text-xs"
                   >
                     Yearly
                   </Button>
                 </div>
                 
                 {expenseBreakdown.length > 0 ? (
-                  <div className="h-80 flex items-center justify-center">
+                  <div className="h-64 sm:h-80 flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie 
                           data={expenseBreakdown} 
                           cx="50%" 
                           cy="50%" 
-                          innerRadius={60} 
-                          outerRadius={100} 
+                          innerRadius={40} 
+                          outerRadius={80} 
                           dataKey="amount" 
                           stroke="#fff" 
                           strokeWidth={2}
@@ -448,7 +453,7 @@ export default function ExpenseManager() {
                           endAngle={-270}
                           animationBegin={0}
                           animationDuration={800}
-                          label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                          label={({ category, percent }) => window.innerWidth >= 640 ? `${category} ${(percent * 100).toFixed(0)}%` : `${(percent * 100).toFixed(0)}%`}
                           labelLine={false}
                         >
                           {expenseBreakdown.map((entry, index) => (

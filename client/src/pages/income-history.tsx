@@ -107,8 +107,10 @@ export default function IncomeHistory() {
       }
     },
     retry: false,
-    staleTime: 0, // No caching - always fresh data
-    refetchInterval: 1000 * 60 * 2, // Refetch every 2 minutes
+    staleTime: 1000 * 60 * 5, // Data fresh for 5 minutes
+    refetchInterval: false, // Disable automatic refetching to prevent unwanted refreshes
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
 
   // Fetch income stats from API
@@ -126,7 +128,9 @@ export default function IncomeHistory() {
     },
     retry: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchInterval: 1000 * 60 * 10, // Refetch every 10 minutes
+    refetchInterval: false, // Disable automatic refetching to prevent unwanted refreshes
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
 
   // Fetch invoices data to include pending amounts
@@ -147,7 +151,9 @@ export default function IncomeHistory() {
     },
     retry: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchInterval: 1000 * 60 * 10, // Refetch every 10 minutes
+    refetchInterval: false, // Disable automatic refetching to prevent unwanted refreshes
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
 
   // Find invoice by number and navigate to document

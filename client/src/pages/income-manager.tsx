@@ -5,15 +5,18 @@ import { Header } from "@/components/header";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatNaira, parseAmount } from "@/lib/currency";
-import { Plus, ChevronLeft, ChevronRight, TrendingUp, FileText, History, BarChart3, Settings, ArrowLeft, Wallet, Calendar, Trash2, Edit, X, PieChart as PieChartIcon } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, FileText, History, BarChart3, Settings, ArrowLeft, Wallet, Calendar, Trash2, Edit, X, PieChart as PieChartIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import type { Income } from "@shared/schema";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +35,11 @@ import {
   Cell,
   Tooltip,
   Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from "recharts";
 
 
@@ -63,6 +71,8 @@ export default function IncomeManager() {
   const queryClient = useQueryClient();
   const [showSavingsForm, setShowSavingsForm] = useState(false);
   const [showNetWorthModal, setShowNetWorthModal] = useState(false);
+  const [activeNetWorthTab, setActiveNetWorthTab] = useState<'assets' | 'liabilities'>('assets');
+  const [activeChartTab, setActiveChartTab] = useState<'assets' | 'liabilities'>('assets');
   const [totalAssetValue, setTotalAssetValue] = useState('');
   const [assets, setAssets] = useState({
     cash: '',
@@ -153,9 +163,15 @@ export default function IncomeManager() {
     queryKey: ["/api/user/net-worth"],
     queryFn: async () => {
       const res = await fetch("/api/user/net-worth");
-      if (!res.ok) throw new Error("Failed to fetch net worth history");
-      return res.json();
-    }
+      if (!res.ok) throw new Error('Failed to fetch net worth history');
+      const data = await res.json();
+      return data;
+    },
+    retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes - data stays fresh for 5 minutes
+    refetchInterval: false, // Disable automatic refetching
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
 
   // Fetch savings records
@@ -165,14 +181,17 @@ export default function IncomeManager() {
       try {
         const res = await fetch("/api/savings");
         if (!res.ok) throw new Error("Failed to fetch savings");
-        return res.json();
+        const data = await res.json();
+        return data;
       } catch (error) {
         console.error('Error fetching savings:', error);
         return [];
       }
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchInterval: false, // Disable automatic refetching
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
 
   // Fetch invoices data
@@ -190,18 +209,14 @@ export default function IncomeManager() {
         return [];
       }
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
-    refetchOnWindowFocus: true, // Refresh when window gains focus
-    refetchOnMount: true, // Force refetch on mount
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchInterval: false, // Disable automatic refetching to prevent unwanted refreshes
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
+    refetchOnMount: false, // Don't force refetch on mount
   });
 
-  // Force immediate refetch on component mount
-  useEffect(() => {
-    // Invalidate and refetch to ensure fresh data
-    queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-    refetchInvoices();
-  }, [refetchInvoices, queryClient]);
+  // Removed forced refetch on mount to prevent unwanted refreshes
 
   // Fetch expenses for net worth calculation
   const { data: expenses = [], isLoading: expensesLoading } = useQuery({
@@ -266,7 +281,65 @@ export default function IncomeManager() {
   const totalAssets = calculateTotalAssets();
   const totalLiabilities = calculateTotalLiabilities();
   const detailedNetWorth = totalAssets - totalLiabilities;
-  const netWorth = detailedNetWorth; // Use the same calculation
+  
+  // Use the latest net worth record from API, falling back to calculated value
+  const latestNetWorthRecord = netWorthHistory && netWorthHistory.length > 0 ? netWorthHistory[0] : null;
+  
+  // Use the latest record data for display
+  const displayAssets = latestNetWorthRecord?.assets || assets;
+  const displayLiabilities = latestNetWorthRecord?.liabilities || liabilities;
+  
+  const displayTotalAssets = displayAssets ? 
+    (() => {
+      const assets = displayAssets || {};
+      const assetValues = Object.values(assets).map(val => {
+        const cleanVal = String(val).replace(/,/g, '');
+        const parsed = cleanVal === '' ? 0 : parseFloat(cleanVal);
+        return parsed;
+      });
+      
+      const total = assetValues.reduce((sum, val) => sum + val, 0);
+      return total;
+    })() : totalAssets;
+  const displayTotalLiabilities = displayLiabilities ?
+    (() => {
+      const liabilities = displayLiabilities || {};
+      const liabilityValues = Object.values(liabilities).map(val => {
+        const cleanVal = String(val).replace(/,/g, '');
+        const parsed = cleanVal === '' ? 0 : parseFloat(cleanVal);
+        return parsed;
+      });
+      
+      const total = liabilityValues.reduce((sum, val) => sum + val, 0);
+      return total;
+    })() : totalLiabilities;
+
+  // Calculate net worth using display totals
+  const calculatedNetWorth = displayTotalAssets - displayTotalLiabilities;
+  
+  // Use the calculated net worth instead of the stored one
+  const netWorth = calculatedNetWorth;
+
+  // Update local state when net worth data is available
+  useEffect(() => {
+    if (latestNetWorthRecord) {
+      setAssets(latestNetWorthRecord.assets || {
+        cash: '',
+        inventory: '',
+        equipment: '',
+        investments: '',
+        property: '',
+        otherAssets: ''
+      });
+      setLiabilities(latestNetWorthRecord.liabilities || {
+        accountsPayable: '',
+        loans: '',
+        creditCards: '',
+        mortgages: '',
+        otherLiabilities: ''
+      });
+    }
+  }, [latestNetWorthRecord]);
 
   // Update total asset value mutation
   const updateAssetValueMutation = useMutation({
@@ -300,8 +373,14 @@ export default function IncomeManager() {
       if (!response.ok) throw new Error('Failed to save net worth data');
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/net-worth"] });
+    onSuccess: (data) => {
+      // Update the cache directly instead of invalidating to prevent refresh
+      queryClient.setQueryData(["/api/user/net-worth"], (old: any) => {
+        if (old && Array.isArray(old)) {
+          return [data, ...old];
+        }
+        return [data];
+      });
       toast({ title: "Success", description: "Net worth data saved successfully" });
       setShowNetWorthModal(false);
     },
@@ -313,14 +392,27 @@ export default function IncomeManager() {
   const handleSaveNetWorth = () => {
     // Store the actual cash amount entered by user (without savings)
     const userCashValue = parseFloat(String(assets.cash || '0').replace(/,/g, ''));
+    
+    // Combine both assets and liabilities data
     const netWorthData = {
       assets: {
-        ...assets,
-        cash: userCashValue.toString() // Save only user-entered cash amount
+        cash: userCashValue.toString() || '0',
+        inventory: assets.inventory || '0',
+        equipment: assets.equipment || '0',
+        investments: assets.investments || '0',
+        property: assets.property || '0',
+        otherAssets: assets.otherAssets || '0'
       },
-      liabilities,
+      liabilities: {
+        accountsPayable: liabilities.accountsPayable || '0',
+        loans: liabilities.loans || '0',
+        creditCards: liabilities.creditCards || '0',
+        mortgages: liabilities.mortgages || '0',
+        otherLiabilities: liabilities.otherLiabilities || '0'
+      },
       netWorth: detailedNetWorth
     };
+    
     saveNetWorthMutation.mutate(netWorthData);
   };
 
@@ -610,10 +702,49 @@ export default function IncomeManager() {
     color: COLORS[idx % COLORS.length],
   }));
 
+  // Helper functions for net worth visualization
+  const getNetWorthCategory = (netWorth: number) => {
+    if (netWorth >= 10000000) return { category: 'Excellent', variant: 'default' };
+    if (netWorth >= 5000000) return { category: 'Good', variant: 'secondary' };
+    if (netWorth >= 1000000) return { category: 'Average', variant: 'outline' };
+    return { category: 'Below Average', variant: 'destructive' };
+  };
+
+  const getNetWorthChartData = () => {
+    const assetData = Object.entries(displayAssets).map(([key, value]) => ({
+      name: key.replace(/([A-Z])/g, ' $1').trim(),
+      amount: parseFloat(String(value).replace(/,/g, '')) || 0,
+      type: 'Asset'
+    })).filter(item => item.amount > 0);
+
+    const liabilityData = Object.entries(displayLiabilities).map(([key, value]) => ({
+      name: key.replace(/([A-Z])/g, ' $1').trim(),
+      amount: parseFloat(String(value).replace(/,/g, '')) || 0,
+      type: 'Liability'
+    })).filter(item => item.amount > 0);
+
+    return [...assetData, ...liabilityData];
+  };
+
+  const getAssetsChartData = () => {
+    return Object.entries(displayAssets).map(([key, value]) => ({
+      name: key.replace(/([A-Z])/g, ' $1').trim(),
+      amount: parseFloat(String(value).replace(/,/g, '')) || 0,
+    })).filter(item => item.amount > 0);
+  };
+
+  const getLiabilitiesChartData = () => {
+    return Object.entries(displayLiabilities).map(([key, value]) => ({
+      name: key.replace(/([A-Z])/g, ' $1').trim(),
+      amount: parseFloat(String(value).replace(/,/g, '')) || 0,
+    })).filter(item => item.amount > 0);
+  };
+
   return (
     <div className="w-full max-w-none md:max-w-4xl lg:max-w-6xl mx-auto bg-background min-h-screen">
       <Header title="Income Manager" showBack={true} backHref="/" />
       
+      {/* (rest of the code remains the same) */}
       <main className="pb-20 px-4 py-4">
         {/* Stats Overview */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -802,16 +933,16 @@ export default function IncomeManager() {
           </div>
         </section>
 
-        {/* Main Content - Two 50% Sections Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Main Content - Responsive Layout */}
+        <div className="space-y-6 mb-6">
           
-          {/* Left 50% - Recent History */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
+          {/* Recent History - Full width on mobile, side-by-side on desktop */}
+          <section className="lg:col-span-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
               <h2 className="text-lg font-semibold">Recent History</h2>
               <div className="flex items-center gap-2">
                 <Link href="/income-history">
-                  <Button variant="ghost" size="sm" data-testid="link-view-all-payments">View All</Button>
+                  <Button variant="ghost" size="sm" className="w-full sm:w-auto" data-testid="link-view-all-payments">View All</Button>
                 </Link>
               </div>
             </div>
@@ -820,19 +951,19 @@ export default function IncomeManager() {
               {recentPayments.length > 0 ? (
                 recentPayments.map((payment) => (
                   <Card key={payment.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{backgroundColor: 'rgba(41, 163, 120, 0.1)'}}>
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{backgroundColor: 'rgba(41, 163, 120, 0.1)'}}>
                             <TrendingUp className="h-5 w-5" style={{color: '#29A378'}} />
                           </div>
-                          <div>
-                            <p className="font-medium" data-testid={`text-payment-source-${payment.id}`}>{payment.source}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm sm:text-base truncate" data-testid={`text-payment-source-${payment.id}`}>{payment.source}</p>
                             <p className="text-sm text-muted-foreground">{payment.date}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold" style={{color: '#29A378', fontFamily: '"Share Tech Mono", monospace'}} data-testid={`text-payment-amount-${payment.id}`}>
+                          <p className="font-semibold text-sm sm:text-base" style={{color: '#29A378', fontFamily: '"Share Tech Mono", monospace'}} data-testid={`text-payment-amount-${payment.id}`}>
                             {formatNaira(payment.amount)}
                           </p>
                           <span className={`text-xs px-2 py-1 rounded-full ${
@@ -857,20 +988,21 @@ export default function IncomeManager() {
             </div>
           </section>
 
-          {/* Right 50% - Income Breakdown Pie Chart */}
-          <section>
+          {/* Income Breakdown - Full width on mobile */}
+          <section className="lg:col-span-1">
             <Card>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
                   <h2 className="text-lg font-semibold">Income Breakdown</h2>
                 </div>
                 
-                {/* Time Period Selection Buttons */}
-                <div className="flex gap-2 mb-4">
+                {/* Time Period Selection Buttons - Responsive */}
+                <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 mb-4">
                   <Button
                     variant={selectedPeriod === 'daily' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedPeriod('daily')}
+                    className="text-xs"
                   >
                     Today
                   </Button>
@@ -878,35 +1010,38 @@ export default function IncomeManager() {
                     variant={selectedPeriod === 'last7days' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedPeriod('last7days')}
+                    className="text-xs"
                   >
-                    Last 7 Days
+                    7 Days
                   </Button>
                   <Button
                     variant={selectedPeriod === 'last30days' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedPeriod('last30days')}
+                    className="text-xs"
                   >
-                    Last 30 Days
+                    30 Days
                   </Button>
                   <Button
                     variant={selectedPeriod === 'yearly' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedPeriod('yearly')}
+                    className="text-xs"
                   >
                     Yearly
                   </Button>
                 </div>
                 
                 {incomeBreakdown.length > 0 ? (
-                  <div className="h-80 flex items-center justify-center">
+                  <div className="h-64 sm:h-80 flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie 
                           data={incomeBreakdown} 
                           cx="50%" 
                           cy="50%" 
-                          innerRadius={60} 
-                          outerRadius={100} 
+                          innerRadius={40} 
+                          outerRadius={80} 
                           dataKey="amount" 
                           stroke="#fff" 
                           strokeWidth={2}
@@ -914,7 +1049,7 @@ export default function IncomeManager() {
                           endAngle={-270}
                           animationBegin={0}
                           animationDuration={800}
-                          label={({ source, percent }) => `${source} ${(percent * 100).toFixed(0)}%`}
+                          label={({ source, percent }) => window.innerWidth >= 640 ? `${source} ${(percent * 100).toFixed(0)}%` : `${(percent * 100).toFixed(0)}%`}
                           labelLine={false}
                         >
                           {incomeBreakdown.map((entry, index) => (
@@ -963,6 +1098,220 @@ export default function IncomeManager() {
             </Card>
           </section>
         </div>
+
+        {/* Net Worth Visualization Section */}
+        <section className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">Net Worth Analysis</h2>
+            <Button
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowNetWorthModal(true)}
+              data-testid="button-update-net-worth"
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Update Net Worth
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Net Worth Summary Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-[#29A378]" />
+                  Net Worth Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Net Worth Display */}
+                  <div className="text-center p-4 bg-gradient-to-r from-[#29A378]/10 to-[#29A378]/5 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Total Net Worth</p>
+                    <p className="text-3xl font-bold text-[#29A378]" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
+                      {formatNaira(netWorth)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Assets: {formatNaira(displayTotalAssets)} - Liabilities: {formatNaira(displayTotalLiabilities)}
+                    </p>
+                  </div>
+
+                  {/* Industry Standard Comparison */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Industry Standard Comparison</h4>
+                    <div className="space-y-2">
+                      {getNetWorthCategory(netWorth) && (
+                        <div className="flex items-center justify-between p-2 bg-muted/30 rounded">
+                          <span className="text-sm font-medium">Your Category:</span>
+                          <Badge variant={getNetWorthCategory(netWorth)?.variant as any}>
+                            {getNetWorthCategory(netWorth)?.category}
+                          </Badge>
+                        </div>
+                      )}
+                      <div className="space-y-1 text-xs text-muted-foreground">
+                        <p>• Excellent: ≥ ₦10M</p>
+                        <p>• Good: ₦5M - ₦9.9M</p>
+                        <p>• Average: ₦1M - ₦4.9M</p>
+                        <p>• Below Average: &lt; ₦1M</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Assets vs Liabilities Chart - Full width on mobile */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-base sm:text-lg">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-[#29A378]" />
+                    Assets vs Liabilities
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Tabs value={activeChartTab} onValueChange={(value) => setActiveChartTab(value as 'assets' | 'liabilities')} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 h-10">
+                    <TabsTrigger value="assets" className="flex items-center gap-1 text-xs sm:text-sm">
+                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Asset</span>
+                      <span className="sm:hidden">A</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="liabilities" className="flex items-center gap-1 text-xs sm:text-sm">
+                      <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Liabilities</span>
+                      <span className="sm:hidden">L</span>
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="assets" className="mt-4">
+                    <div className="h-56 sm:h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={getAssetsChartData()}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <YAxis tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`} tick={{ fontSize: 12 }} />
+                          <Tooltip formatter={(value: number) => [formatNaira(value), '']} />
+                          <Bar dataKey="amount" fill="#29A378" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="liabilities" className="mt-4">
+                    <div className="h-56 sm:h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={getLiabilitiesChartData()}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <YAxis tickFormatter={(value) => `₦${(value / 1000000).toFixed(1)}M`} tick={{ fontSize: 12 }} />
+                          <Tooltip formatter={(value: number) => [formatNaira(value), '']} />
+                          <Bar dataKey="amount" fill="#EF4444" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Detailed Breakdown - Responsive Layout */}
+          <div className="space-y-6 mt-6">
+            {/* Assets Breakdown */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-[#29A378]" />
+                  Assets Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(displayAssets).map(([key, value]) => {
+                    const amount = parseFloat(String(value).replace(/,/g, '')) || 0;
+                    if (amount === 0) return null;
+                    const percentage = displayTotalAssets > 0 ? (amount / displayTotalAssets * 100).toFixed(1) : '0.0';
+                    return (
+                      <div key={key} className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-[#29A378]" />
+                          <span className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-medium" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
+                            {formatNaira(amount)}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-2">{percentage}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {Object.values(displayAssets).every(v => parseFloat(String(v).replace(/,/g, '')) === 0) && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No assets recorded</p>
+                  )}
+                  {Object.values(displayAssets).some(v => parseFloat(String(v).replace(/,/g, '')) > 0) && (
+                    <div className="pt-2 border-t mt-2">
+                      <div className="flex justify-between items-center font-medium">
+                        <span className="text-sm">Total Assets</span>
+                        <span className="text-sm text-[#29A378]" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
+                          {formatNaira(displayTotalAssets)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Liabilities Breakdown */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <TrendingDown className="h-4 w-4 text-[#EF4444]" />
+                  Liabilities Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(displayLiabilities).map(([key, value]) => {
+                    const amount = parseFloat(String(value).replace(/,/g, '')) || 0;
+                    if (amount === 0) return null;
+                    const percentage = displayTotalLiabilities > 0 ? (amount / displayTotalLiabilities * 100).toFixed(1) : '0.0';
+                    return (
+                      <div key={key} className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
+                          <span className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-medium text-red-600" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
+                            {formatNaira(amount)}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-2">{percentage}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {Object.values(displayLiabilities).every(v => parseFloat(String(v).replace(/,/g, '')) === 0) && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No liabilities recorded</p>
+                  )}
+                  {Object.values(displayLiabilities).some(v => parseFloat(String(v).replace(/,/g, '')) > 0) && (
+                    <div className="pt-2 border-t mt-2">
+                      <div className="flex justify-between items-center font-medium">
+                        <span className="text-sm">Total Liabilities</span>
+                        <span className="text-sm text-[#EF4444]" style={{ fontFamily: '"Share Tech Mono", monospace' }}>
+                          {formatNaira(displayTotalLiabilities)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
       </main>
 
       {/* Add Income Modal */}
@@ -1206,84 +1555,155 @@ export default function IncomeManager() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold">Update Net Worth</AlertDialogTitle>
             <AlertDialogDescription>
-              Update your net worth by entering your total asset value and individual assets.
+              Update your net worth by managing your assets and liabilities.
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <form onSubmit={handleSaveNetWorth} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Total Asset Value</label>
-              <Input
-                type="number"
-                value={totalAssetValue}
-                onChange={(e) => setTotalAssetValue(e.target.value)}
-                placeholder="Enter total asset value"
-                required
-              />
-            </div>
+          <Tabs value={activeNetWorthTab} onValueChange={(value) => setActiveNetWorthTab(value as 'assets' | 'liabilities')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="assets" className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Assets
+              </TabsTrigger>
+              <TabsTrigger value="liabilities" className="flex items-center gap-2">
+                <TrendingDown className="h-4 w-4" />
+                Liabilities
+              </TabsTrigger>
+            </TabsList>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Cash</label>
-                <Input
-                  type="number"
-                  value={assets.cash}
-                  onChange={(e) => setAssets({...assets, cash: e.target.value})}
-                  placeholder="Cash amount"
-                />
+            <TabsContent value="assets" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Total Asset Value</label>
+                  <Input
+                    type="number"
+                    value={totalAssetValue}
+                    onChange={(e) => setTotalAssetValue(e.target.value)}
+                    placeholder="Enter total asset value"
+                    required
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Cash</label>
+                    <Input
+                      type="number"
+                      value={assets.cash}
+                      onChange={(e) => setAssets({...assets, cash: e.target.value})}
+                      placeholder="Cash amount"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Inventory</label>
+                    <Input
+                      type="number"
+                      value={assets.inventory}
+                      onChange={(e) => setAssets({...assets, inventory: e.target.value})}
+                      placeholder="Inventory value"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Equipment</label>
+                    <Input
+                      type="number"
+                      value={assets.equipment}
+                      onChange={(e) => setAssets({...assets, equipment: e.target.value})}
+                      placeholder="Equipment value"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Investments</label>
+                    <Input
+                      type="number"
+                      value={assets.investments}
+                      onChange={(e) => setAssets({...assets, investments: e.target.value})}
+                      placeholder="Investments total"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Property</label>
+                    <Input
+                      type="number"
+                      value={assets.property}
+                      onChange={(e) => setAssets({...assets, property: e.target.value})}
+                      placeholder="Property value"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Other Assets</label>
+                    <Input
+                      type="number"
+                      value={assets.otherAssets}
+                      onChange={(e) => setAssets({...assets, otherAssets: e.target.value})}
+                      placeholder="Other assets value"
+                    />
+                  </div>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Inventory</label>
-                <Input
-                  type="number"
-                  value={assets.inventory}
-                  onChange={(e) => setAssets({...assets, inventory: e.target.value})}
-                  placeholder="Inventory value"
-                />
+            </TabsContent>
+            
+            <TabsContent value="liabilities" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Accounts Payable</label>
+                    <Input
+                      type="number"
+                      value={liabilities.accountsPayable}
+                      onChange={(e) => setLiabilities({...liabilities, accountsPayable: e.target.value})}
+                      placeholder="Accounts payable amount"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Loans</label>
+                    <Input
+                      type="number"
+                      value={liabilities.loans}
+                      onChange={(e) => setLiabilities({...liabilities, loans: e.target.value})}
+                      placeholder="Loan amount"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Credit Cards</label>
+                    <Input
+                      type="number"
+                      value={liabilities.creditCards}
+                      onChange={(e) => setLiabilities({...liabilities, creditCards: e.target.value})}
+                      placeholder="Credit card debt"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Mortgages</label>
+                    <Input
+                      type="number"
+                      value={liabilities.mortgages}
+                      onChange={(e) => setLiabilities({...liabilities, mortgages: e.target.value})}
+                      placeholder="Mortgage amount"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium">Other Liabilities</label>
+                    <Input
+                      type="number"
+                      value={liabilities.otherLiabilities}
+                      onChange={(e) => setLiabilities({...liabilities, otherLiabilities: e.target.value})}
+                      placeholder="Other liabilities"
+                    />
+                  </div>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Equipment</label>
-                <Input
-                  type="number"
-                  value={assets.equipment}
-                  onChange={(e) => setAssets({...assets, equipment: e.target.value})}
-                  placeholder="Equipment value"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Investments</label>
-                <Input
-                  type="number"
-                  value={assets.investments}
-                  onChange={(e) => setAssets({...assets, investments: e.target.value})}
-                  placeholder="Investments total"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Property</label>
-                <Input
-                  type="number"
-                  value={assets.property}
-                  onChange={(e) => setAssets({...assets, property: e.target.value})}
-                  placeholder="Property value"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Other Assets</label>
-                <Input
-                  type="number"
-                  value={assets.otherAssets}
-                  onChange={(e) => setAssets({...assets, otherAssets: e.target.value})}
-                  placeholder="Other assets value"
-                />
-              </div>
-            </div>
-          </form>
+            </TabsContent>
+          </Tabs>
 
           <AlertDialogFooter>
             <AlertDialogCancel
@@ -1297,6 +1717,13 @@ export default function IncomeManager() {
                   investments: '',
                   property: '',
                   otherAssets: ''
+                });
+                setLiabilities({
+                  accountsPayable: '',
+                  loans: '',
+                  creditCards: '',
+                  mortgages: '',
+                  otherLiabilities: ''
                 });
               }}
             >

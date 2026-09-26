@@ -468,11 +468,11 @@ export default function Reports() {
               </CardTitle>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
                 <select 
                   value={filter} 
                   onChange={(e) => setFilter(e.target.value)}
-                  className="px-3 py-2 border rounded text-base bg-background border-border hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="px-3 py-2 border rounded text-base bg-background border-border hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring min-w-0 flex-shrink-0"
                 >
                   <option value="all">All Time</option>
                   <option value="weekly">This Week</option>
@@ -480,26 +480,28 @@ export default function Reports() {
                   <option value="yearly">This Year</option>
                   <option value="custom">Custom</option>
                 </select>
-              </div>
-              <div className="flex gap-1">
-                <Button 
-                  onClick={() => exportToCSV(filteredRecords, `${type}-${filter}.csv`)}
-                  size="sm"
-                  variant="outline"
-                  className="flex items-center gap-1 px-3 py-2 text-base"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>CSV</span>
-                </Button>
-                <Button 
-                  onClick={() => exportToPDF(filteredRecords, title)}
-                  size="sm"
-                  variant="outline"
-                  className="flex items-center gap-1 px-3 py-2 text-base"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>PDF</span>
-                </Button>
+                <div className="flex gap-1 flex-shrink-0">
+                  <Button 
+                    onClick={() => exportToCSV(filteredRecords, `${type}-${filter}.csv`)}
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-1 px-3 py-2 text-base"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">CSV</span>
+                    <span className="sm:hidden">CSV</span>
+                  </Button>
+                  <Button 
+                    onClick={() => exportToPDF(filteredRecords, title)}
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-1 px-3 py-2 text-base"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span className="hidden sm:inline">PDF</span>
+                    <span className="sm:hidden">PDF</span>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

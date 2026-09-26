@@ -267,7 +267,7 @@ export default function IncomeSettings() {
   if (isLoading) {
     return (
       <div className="w-full max-w-none md:max-w-4xl lg:max-w-6xl mx-auto bg-background min-h-screen">
-        <Header title="Income Settings" showBack={true} backHref="/income-source-manager" />
+        <Header title="Income Settings" showBack={true} backHref="/settings" />
         <main className="pb-20 px-4 py-6">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -280,7 +280,7 @@ export default function IncomeSettings() {
 
   return (
     <div className="w-full max-w-none md:max-w-4xl lg:max-w-6xl mx-auto bg-background min-h-screen">
-      <Header title="Income Settings" showBack={true} backHref="/income-source-manager" />
+      <Header title="Income Settings" showBack={true} backHref="/settings" />
       
       <main className="pb-20 px-4 py-6">
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -367,25 +367,26 @@ export default function IncomeSettings() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Add Bank Account Button */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowAddBankForm(!showAddBankForm)}
-                  className="flex-1"
+                  className="w-full sm:flex-1"
                   data-testid="button-add-bank-account"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Bank Account
+                  <span className="truncate">Add Bank Account</span>
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => refetchBankAccounts()}
-                  className="px-3"
+                  className="w-full sm:w-auto px-3"
                   data-testid="button-refresh-bank-accounts"
                 >
-                  Refresh
+                  <span className="hidden sm:inline">Refresh</span>
+                  <span className="sm:hidden">🔄</span>
                 </Button>
               </div>
 
@@ -456,7 +457,7 @@ export default function IncomeSettings() {
                       </select>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-x-0 sm:space-x-4 space-y-2 sm:space-y-0">
                     <div className="flex items-center space-x-2">
                       <input
                         type="checkbox"
@@ -466,7 +467,7 @@ export default function IncomeSettings() {
                         className="rounded border-gray-300"
                         data-testid="checkbox-is-default"
                       />
-                      <Label htmlFor="isDefault" className="text-sm">Set as default</Label>
+                      <Label htmlFor="isDefault" className="text-sm whitespace-nowrap">Set as default</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <input
@@ -477,18 +478,18 @@ export default function IncomeSettings() {
                         className="rounded border-gray-300"
                         data-testid="checkbox-include-invoice"
                       />
-                      <Label htmlFor="includeInInvoice" className="text-sm">Include in invoice</Label>
+                      <Label htmlFor="includeInInvoice" className="text-sm whitespace-nowrap">Include in invoice</Label>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       type="button"
                       onClick={handleAddBankAccount}
-                      className="flex-1"
+                      className="w-full sm:flex-1"
                       data-testid="button-save-bank-account"
                     >
                       <Save className="w-4 h-4 mr-2" />
-                      Save Bank Account
+                      <span className="truncate">Save Bank Account</span>
                     </Button>
                     <Button
                       type="button"
@@ -505,6 +506,7 @@ export default function IncomeSettings() {
                           includeInInvoice: true,
                         });
                       }}
+                      className="w-full sm:w-auto"
                       data-testid="button-cancel-bank-account"
                     >
                       Cancel
@@ -515,60 +517,64 @@ export default function IncomeSettings() {
 
               {/* Bank Accounts List */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Saved Bank Accounts</h4>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h4 className="font-medium text-base sm:text-base">Saved Bank Accounts</h4>
                   <span className="text-xs text-muted-foreground">
                     {bankAccounts.length} accounts • Loading: {isLoadingBankAccounts ? 'Yes' : 'No'}
                   </span>
                 </div>
                 {bankAccounts.length > 0 ? (
                   bankAccounts.map((account) => (
-                    <div key={account.id} className="border rounded-lg p-4 space-y-3">
-                      <div className="flex items-start justify-between">
+                    <div key={account.id} className="border rounded-lg p-3 sm:p-4 space-y-3">
+                      <div className="flex flex-col gap-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="font-medium">{account.bankName}</span>
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <span className="font-medium text-sm sm:text-base truncate">{account.bankName}</span>
                             {account.isDefault && (
-                              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Default</span>
+                              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded whitespace-nowrap">Default</span>
                             )}
                             {account.includeInInvoice && (
-                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">In Invoice</span>
+                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded whitespace-nowrap">In Invoice</span>
                             )}
                           </div>
-                          <div className="text-sm text-muted-foreground space-y-1">
-                            <p>Account Name: {account.accountName}</p>
-                            <p>Account Number: {account.accountNumber}</p>
+                          <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
+                            <p className="break-all">Account Name: {account.accountName}</p>
+                            <p className="font-mono">Account Number: {account.accountNumber}</p>
                             <p>Type: {account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1)} ({account.currency})</p>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => handleSetDefaultBank(account.id)}
                             disabled={account.isDefault}
+                            className="flex-1 sm:flex-none"
                             data-testid={`button-set-default-${account.id}`}
                           >
-                            {account.isDefault ? "Default" : "Set Default"}
+                            <span className="text-xs sm:text-sm">{account.isDefault ? "Default" : "Set Default"}</span>
                           </Button>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => handleToggleInvoiceInclude(account.id)}
+                            className="flex-1 sm:flex-none"
                             data-testid={`button-toggle-invoice-${account.id}`}
                           >
-                            {account.includeInInvoice ? "Remove from Invoice" : "Add to Invoice"}
+                            <span className="text-xs sm:text-sm hidden sm:inline">{account.includeInInvoice ? "Remove from Invoice" : "Add to Invoice"}</span>
+                            <span className="text-xs sm:text-sm sm:hidden">{account.includeInInvoice ? "Remove" : "Add"}</span>
                           </Button>
                           <Button
                             type="button"
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDeleteBankAccount(account.id)}
+                            className="px-2 sm:px-3"
                             data-testid={`button-delete-bank-${account.id}`}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3 h-3 sm:w-4 h-4" />
                           </Button>
                         </div>
                       </div>

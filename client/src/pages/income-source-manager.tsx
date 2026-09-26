@@ -759,7 +759,7 @@ export default function IncomeSourceManager() {
                   Business Information
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Add your business information for invoices and reports. This information will appear on all your invoices.
+                  This information will appear on all your invoices and reports.
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">

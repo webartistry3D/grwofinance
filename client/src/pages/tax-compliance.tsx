@@ -620,8 +620,10 @@ export default function TaxCompliance() {
       return response.json();
     },
     retry: false, // Disable automatic retries to show error state
-    refetchInterval: 30000, // Refresh data every 30 seconds for real-time updates
-    staleTime: 25000, // Consider data stale after 25 seconds
+    refetchInterval: false, // Disable automatic refetching to prevent unwanted refreshes
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 
   // Fetch expense WHT data (WHT deducted from suppliers)
