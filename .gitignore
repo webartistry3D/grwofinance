@@ -53,3 +53,6 @@ pids
 
 # OS generated files
 Thumbs.db
+
+migrations/
+primary-font-style/
